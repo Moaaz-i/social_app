@@ -22,7 +22,7 @@ const PostCard = memo(
     showFullDetails = false
   }) => {
     const {userData} = useAuth()
-    
+
     // Extract post data first
     const {
       _id: postId,
@@ -34,10 +34,9 @@ const PostCard = memo(
       comments: postComments = [],
       commentsCount = postComments.length
     } = post || {}
-    
+
     // Then use them in state
     const [showAllComments, setShowAllComments] = useState(false)
-    const [newComment, setNewComment] = useState('')
     const [isEditing, setIsEditing] = useState(false)
     const [editBody, setEditBody] = useState(body)
     const [editImage, setEditImage] = useState(null)
@@ -122,20 +121,18 @@ const PostCard = memo(
     }, [postId, onToggleLike, userData?.user?._id])
 
     const handleAddComment = useCallback(
-      async (e) => {
-        e.preventDefault()
-        if (!newComment.trim()) return
+      async (data) => {
+        if (!data.comment.trim()) return
 
         try {
-          await onAddComment(postId, newComment)
-          setNewComment('')
+          await onAddComment(postId, data.comment)
           toast.success('Comment added successfully')
         } catch (error) {
           console.error('Failed to add comment:', error)
-          toast.error(error.message || 'Failed to add comment')
+          toast.error(error || 'Failed to add comment')
         }
       },
-      [newComment, postId, onAddComment]
+      [postId, onAddComment]
     )
 
     const handleDeleteComment = useCallback(
@@ -237,7 +234,9 @@ const PostCard = memo(
                 <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                   <div className="p-6">
                     <div className="flex justify-between items-center mb-4">
-                      <h2 className="text-2xl font-bold text-gray-800">Edit Post</h2>
+                      <h2 className="text-2xl font-bold text-gray-800">
+                        Edit Post
+                      </h2>
                       <button
                         onClick={handleCancelEdit}
                         className="text-gray-500 hover:text-gray-700"
@@ -319,10 +318,7 @@ const PostCard = memo(
             {/* Comments Section */}
             <div className="mt-4 border-t border-gray-100 pt-3">
               <CommentForm
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
                 onSubmit={handleAddComment}
-                inputId={`comment-${postId}`}
               />
 
               {postComments.length > 0 && (
