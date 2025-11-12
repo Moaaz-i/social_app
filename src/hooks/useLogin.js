@@ -10,16 +10,7 @@ const useLogin = () => {
 
   const Login = useCallback(
     async (email, password) => {
-      // Handle both direct calls and form events
-      const formEvent = email?.preventDefault ? email : null;
-      const emailValue = formEvent ? password : email;
-      const passwordValue = formEvent ? null : password;
-
-      if (formEvent) {
-        formEvent.preventDefault();
-      }
-
-      if (!emailValue || !passwordValue) {
+      if (!email || !password) {
         const errorMsg = "Email and password are required";
         setError(errorMsg);
         return { error: errorMsg };
@@ -29,19 +20,14 @@ const useLogin = () => {
 
       try {
         const result = await loginService.mutateAsync({
-          email: emailValue,
-          password: passwordValue,
+          email: email,
+          password: password,
         });
 
-        const userData = await login(result.token);
-        if (userData) {
-          setLoginData(result);
-          return result;
-        }
-
-        const errorMessage = "Login failed. Please try again.";
-        setError(errorMessage);
-        return { error: errorMessage };
+        // Set token and trigger profile fetch
+        await login(result.token);
+        setLoginData(result);
+        return result;
       } catch (err) {
         console.error("Login error:", err);
         const errorMessage =

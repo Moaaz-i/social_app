@@ -1,11 +1,6 @@
-import {
-  createContext,
-  useState,
-  useCallback,
-  useEffect,
-  useMemo
-} from 'react'
+import {createContext, useState, useCallback, useEffect, useMemo} from 'react'
 import {useGetProfile} from '../services/profileService'
+import {useQueryClient} from '@tanstack/react-query'
 
 const AuthContext = createContext({})
 
@@ -15,6 +10,7 @@ const AuthProvider = ({children}) => {
     localStorage.getItem('access_token')
   )
   const [error, setError] = useState(null)
+  const queryClient = useQueryClient()
   const getProfile = useGetProfile({
     enabled: !!localStorage.getItem('access_token'),
     retry: false,
@@ -51,14 +47,19 @@ const AuthProvider = ({children}) => {
     }
   }, [])
 
-  const login = useCallback(async (token) => {
-    if (token) {
-      localStorage.setItem('access_token', token)
-      setStoredToken(token)
-      return true
-    }
-    return false
-  }, [])
+  const login = useCallback(
+    async (token) => {
+      if (token) {
+        localStorage.setItem('access_token', token)
+        setStoredToken(token)
+        // Invalidate and refetch profile query
+        queryClient.invalidateQueries(['profile'])
+        return true
+      }
+      return false
+    },
+    [queryClient]
+  )
 
   const logout = useCallback(() => {
     try {
@@ -66,10 +67,12 @@ const AuthProvider = ({children}) => {
       setStoredToken(null)
       setUserData(null)
       setError(null)
+      // Clear profile query from cache
+      queryClient.clear()
     } catch (err) {
       setError(err.message || 'Logout failed')
     }
-  }, [])
+  }, [queryClient])
 
   const value = useMemo(
     () => ({

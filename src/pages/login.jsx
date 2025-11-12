@@ -4,13 +4,24 @@ import {z} from 'zod'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {Link, useNavigate} from 'react-router-dom'
 import {FiMail, FiLock, FiLogIn} from 'react-icons/fi'
+import useAuth from '../hooks/useAuth'
+import {useEffect, useState} from 'react'
 
 const Login = () => {
   const navigate = useNavigate()
+  const {userData} = useAuth()
+  const [loginSuccess, setLoginSuccess] = useState(false)
   const schema = z.object({
     email: z.string().email('Invalid email address'),
     password: z.string().min(6, 'Password must be at least 6 characters long')
   })
+
+  // Navigate to home when userData is available after successful login
+  useEffect(() => {
+    if (loginSuccess && userData) {
+      navigate('/')
+    }
+  }, [loginSuccess, userData, navigate])
 
   const {
     register,
@@ -26,7 +37,8 @@ const Login = () => {
   const onSubmit = async (data) => {
     const result = await Login(data.email, data.password)
     if (result && !result.error) {
-      window.location.reload()
+      setLoginSuccess(true)
+    } else {
     }
   }
 
@@ -60,7 +72,11 @@ const Login = () => {
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-center gap-2 animate-shake">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
               </svg>
               {error}
             </div>
@@ -83,7 +99,9 @@ const Login = () => {
                   type="email"
                   {...register('email')}
                   className={`block w-full pr-12 pl-4 py-3.5 border-2 ${
-                    errors.email ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
+                    errors.email
+                      ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
+                      : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
                   } rounded-xl shadow-sm focus:ring-4 transition-all duration-200 bg-gray-50 focus:bg-white`}
                   placeholder="your@email.com"
                   dir="ltr"
@@ -91,8 +109,16 @@ const Login = () => {
               </div>
               {errors.email && (
                 <p className="mt-2 text-sm text-red-600 text-left flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   {errors.email.message}
                 </p>
@@ -123,7 +149,9 @@ const Login = () => {
                   type="password"
                   {...register('password')}
                   className={`block w-full pr-12 pl-4 py-3.5 border-2 ${
-                    errors.password ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
+                    errors.password
+                      ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
+                      : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
                   } rounded-xl shadow-sm focus:ring-4 transition-all duration-200 bg-gray-50 focus:bg-white`}
                   placeholder="Enter your password"
                   dir="ltr"
@@ -131,8 +159,16 @@ const Login = () => {
               </div>
               {errors.password && (
                 <p className="mt-2 text-sm text-red-600 text-left flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   {errors.password.message}
                 </p>

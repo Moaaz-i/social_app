@@ -3,8 +3,9 @@ import { ENDPOINTS } from "../constants/apiEndpoints";
 
 export const useGetProfile = (options = {}) => {
   return useApiQuery("profile", `/${ENDPOINTS.PROFILE}`, {
-    refetchInterval: 3000, // Refetch every 3 seconds
-    staleTime: 0, // Always consider data stale to allow refetch
+    refetchInterval: false, // Disable automatic refetching
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     structuralSharing: true, // Only update if data actually changed
     ...options,
     onSuccess: (data, variables, context) => {
