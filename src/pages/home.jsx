@@ -12,7 +12,16 @@ import {useUploadPhoto} from '../services/profileService'
 import {useNavigate, Link} from 'react-router-dom'
 import {useState, useRef, useEffect} from 'react'
 import {toast} from 'react-hot-toast'
-import {FiCamera, FiLogOut, FiMail, FiCalendar, FiCheckCircle, FiUser, FiFileText, FiPlusCircle} from 'react-icons/fi'
+import {
+  FiCamera,
+  FiLogOut,
+  FiMail,
+  FiCalendar,
+  FiCheckCircle,
+  FiUser,
+  FiFileText,
+  FiPlusCircle
+} from 'react-icons/fi'
 
 const Home = () => {
   const {userData, logout} = useAuth()
@@ -33,6 +42,7 @@ const Home = () => {
   // Update image key when user photo changes
   useEffect(() => {
     if (user?.photo && !photoPreview) {
+      setPhotoPreview(user?.photo)
       setImageKey(Date.now())
     }
   }, [user?.photo, photoPreview])
@@ -150,17 +160,15 @@ const Home = () => {
 
       await uploadPhoto.mutateAsync(formData)
       toast.success('Photo updated successfully!')
-      // Clear preview after successful upload
-      setPhotoPreview(null)
-      // Force image refresh
+
       setTimeout(() => {
         setImageKey(Date.now())
       }, 500)
     } catch (error) {
       console.error('Failed to upload photo:', error)
       toast.error(error?.message || 'Failed to upload photo')
-      // Revert preview on error
-      setPhotoPreview(null)
+
+      setPhotoPreview(user?.photo)
     } finally {
       setIsUploadingPhoto(false)
       if (fileInputRef.current) {
@@ -178,72 +186,72 @@ const Home = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5"></div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full blur-3xl opacity-10"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-pink-400 to-blue-600 rounded-full blur-3xl opacity-10"></div>
-          
+
           <div className="relative p-8">
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="relative w-32 h-32 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center text-white text-5xl font-bold shadow-2xl group">
-              {photoPreview || user?.photo ? (
-                <img
-                  key={imageKey}
-                  src={photoPreview || `${user?.photo}?v=${imageKey}`}
-                  alt={user?.name}
-                  className="w-full h-full object-cover rounded-3xl"
-                  loading="eager"
-                />
-              ) : (
-                user?.name?.charAt(0).toUpperCase()
-              )}
-
-              {/* Camera Icon Overlay */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploadingPhoto}
-                className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/40 rounded-3xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer disabled:cursor-not-allowed backdrop-blur-sm"
-              >
-                {isUploadingPhoto ? (
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="relative w-32 h-32 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center text-white text-5xl font-bold shadow-2xl group">
+                {photoPreview ? (
+                  <img
+                    key={imageKey}
+                    src={photoPreview}
+                    alt={user?.name}
+                    className="w-full h-full object-cover rounded-3xl"
+                    loading="eager"
+                  />
                 ) : (
-                  <FiCamera className="text-white text-2xl" />
+                  user?.name?.charAt(0).toUpperCase()
                 )}
-              </button>
 
-              {/* Hidden File Input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoChange}
-                className="hidden"
-              />
-            </div>
-            <div className="flex-1 text-center md:text-left">
-              <h1 className="text-4xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-transparent bg-clip-text mb-2">
-                {user?.name}
-              </h1>
-              <p className="text-gray-600 flex items-center justify-center md:justify-start gap-2 mb-4">
-                <FiMail className="w-4 h-4" />
-                {user?.email}
-              </p>
-              <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-semibold rounded-xl shadow-lg">
-                  <FiUser className="w-4 h-4" />
-                  {user?.role === 'admin' ? 'Admin' : 'User'}
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-semibold rounded-xl shadow-lg">
-                  <FiCheckCircle className="w-4 h-4" />
-                  {user?.isVerified ? 'Verified' : 'Not Verified'}
-                </span>
+                {/* Camera Icon Overlay */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingPhoto}
+                  className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/40 rounded-3xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer disabled:cursor-not-allowed backdrop-blur-sm"
+                >
+                  {isUploadingPhoto ? (
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                  ) : (
+                    <FiCamera className="text-white text-2xl" />
+                  )}
+                </button>
+
+                {/* Hidden File Input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                />
               </div>
+              <div className="flex-1 text-center md:text-left">
+                <h1 className="text-4xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-transparent bg-clip-text mb-2">
+                  {user?.name}
+                </h1>
+                <p className="text-gray-600 flex items-center justify-center md:justify-start gap-2 mb-4">
+                  <FiMail className="w-4 h-4" />
+                  {user?.email}
+                </p>
+                <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-semibold rounded-xl shadow-lg">
+                    <FiUser className="w-4 h-4" />
+                    {user?.role === 'admin' ? 'Admin' : 'User'}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-semibold rounded-xl shadow-lg">
+                    <FiCheckCircle className="w-4 h-4" />
+                    {user?.isVerified ? 'Verified' : 'Not Verified'}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => logout()}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+              >
+                <FiLogOut className="w-5 h-5" />
+                Logout
+              </button>
             </div>
-            
-            <button
-              onClick={() => logout()}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-            >
-              <FiLogOut className="w-5 h-5" />
-              Logout
-            </button>
-          </div>
           </div>
         </div>
 
@@ -285,7 +293,9 @@ const Home = () => {
             </div>
             <div className="flex items-center gap-3">
               <span className="h-4 w-4 bg-green-500 rounded-full animate-pulse shadow-lg"></span>
-              <span className="text-green-600 font-bold text-lg">Active & Verified</span>
+              <span className="text-green-600 font-bold text-lg">
+                Active & Verified
+              </span>
             </div>
           </div>
         </div>
@@ -299,11 +309,12 @@ const Home = () => {
               </div>
               Your Posts
             </h2>
-            <p className="text-white/90 mt-2">Share your thoughts with the world</p>
+            <p className="text-white/90 mt-2">
+              Share your thoughts with the world
+            </p>
           </div>
-          
-          <div className="p-6">
 
+          <div className="p-6">
             {userPosts.length > 0 ? (
               <div className="space-y-4">
                 {userPosts.map((post) => (

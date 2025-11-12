@@ -45,8 +45,7 @@ const useLogin = () => {
       } catch (err) {
         console.error("Login error:", err);
         const errorMessage =
-          err?.response?.data?.message ||
-          err?.message ||
+          err.error ||
           "Login failed. Please try again.";
         setError(errorMessage);
         return { error: errorMessage };

@@ -3,8 +3,7 @@ import {
   useState,
   useCallback,
   useEffect,
-  useMemo,
-  useRef
+  useMemo
 } from 'react'
 import {useGetProfile} from '../services/profileService'
 
@@ -21,19 +20,16 @@ const AuthProvider = ({children}) => {
     retry: false,
     staleTime: 5 * 60 * 1000 // 5 minutes
   })
-  const hasSetUserData = useRef(false)
 
   // Update userData when profile is loaded
   useEffect(() => {
-    if (getProfile.isSuccess && getProfile?.data && !hasSetUserData.current) {
+    if (getProfile.isSuccess && getProfile?.data) {
       setUserData(getProfile.data)
-      hasSetUserData.current = true
     } else if (getProfile.isError) {
-      hasSetUserData.current = false
       setUserData(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getProfile.isSuccess, getProfile.isError])
+  }, [getProfile.isSuccess, getProfile.isError, getProfile.data])
 
   // Compute isAuthenticated based on token and userData
   const isAuthenticated = useMemo(() => {
@@ -70,7 +66,6 @@ const AuthProvider = ({children}) => {
       setStoredToken(null)
       setUserData(null)
       setError(null)
-      hasSetUserData.current = false
     } catch (err) {
       setError(err.message || 'Logout failed')
     }

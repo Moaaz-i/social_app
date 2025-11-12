@@ -30,8 +30,8 @@ const useSignup = () => {
       }
 
       return { error: "Signup failed" };
-    } catch (err) {
-      const errorMessage = err?.response?.data?.message || err?.message || "Signup failed";
+    } catch (error) {
+      const errorMessage = error.error || "Signup failed";
       setError(errorMessage);
       return { error: errorMessage };
     }

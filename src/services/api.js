@@ -78,7 +78,7 @@ http.interceptors.response.use(
       stopLoading();
     }
     
-    const errorMessage = error.response?.data?.message || "An error occurred";
+    const errorMessage = error.response?.data?.message || error.response?.data || "An error occurred";
 
     if (error.response?.status === 401) {
       // Handle unauthorized access
