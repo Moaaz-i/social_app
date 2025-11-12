@@ -3,10 +3,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FiUser, FiMail, FiEye, FiUserPlus, FiEyeOff } from "react-icons/fi";
 import useSignup from "../hooks/useSignup";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 const Signup = () => {
+  const navigate = useNavigate();
   const [gender, setGender] = useState("male");
 
   const schema = z
@@ -44,7 +45,10 @@ const Signup = () => {
 
   const onSubmit = async (data) => {
     const { name, email, password, rePassword, dateOfBirth } = data;
-    await signup(name, email, password, rePassword, gender, dateOfBirth);
+    const result = await signup(name, email, password, rePassword, gender, dateOfBirth);
+    if (result && !result.error) {
+      navigate('/login');
+    }
   };
 
   const [showPassword, setShowPassword] = useState(false);

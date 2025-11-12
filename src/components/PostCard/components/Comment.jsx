@@ -1,34 +1,35 @@
-import { formatDistanceToNow } from "date-fns";
+import {formatDistanceToNow} from 'date-fns'
 
 const Comment = ({
   comment = {},
-  currentUserId = "",
-  postOwnerId = "",
-  onDeleteComment,
+  currentUserId = '',
+  postOwnerId = '',
+  onDeleteComment
 }) => {
   // Add null checks for comment and comment.user
-  const user = comment?.commentCreator || {};
+  const user = comment?.commentCreator || {}
   const isAuthorized =
-    currentUserId === user?._id || currentUserId === postOwnerId;
+    currentUserId === user?._id || currentUserId === postOwnerId
 
   return (
     <div className="flex items-start group">
       <img
         src={
-          user?.photo?.endsWith("undefined")
-            ? "https://linked-posts.routemisr.com/uploads/default-profile.png"
+          user?.photo?.endsWith('undefined')
+            ? 'https://linked-posts.routemisr.com/uploads/default-profile.png'
             : user.photo
         }
-        alt={user.name || "User"}
+        alt={user.name || 'User'}
         className="w-8 h-8 rounded-full mr-2 mt-1"
+        loading="eager"
       />
       <div className="bg-gray-50 rounded-lg px-3 py-2 flex-1">
         <div className="flex justify-between items-start">
           <div>
             <span className="font-medium text-sm text-gray-900">
-              {user.name || "Unknown User"}
+              {user.name || 'Unknown User'}
             </span>
-            <p className="text-sm text-gray-700">{comment.content || ""}</p>
+            <p className="text-sm text-gray-700">{comment.content || ''}</p>
           </div>
           {isAuthorized && (
             <button
@@ -54,12 +55,12 @@ const Comment = ({
         </div>
         <div className="text-xs text-gray-400 mt-1">
           {formatDistanceToNow(new Date(comment.createdAt), {
-            addSuffix: true,
+            addSuffix: true
           })}
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Comment;
+export default Comment

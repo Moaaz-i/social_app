@@ -5,6 +5,7 @@ import Signup from "./pages/signup";
 import Login from "./pages/login";
 import Posts from "./pages/Posts";
 import CreatePost from "./pages/CreatePost";
+import PostDetails from "./pages/PostDetails";
 import ProtectAuth from "./components/Protect/Protect.Auth";
 import ProtectRoute from "./components/Protect/Protect.Route";
 
@@ -35,6 +36,14 @@ function App() {
           element: (
             <ProtectRoute>
               <CreatePost />
+            </ProtectRoute>
+          ),
+        },
+        {
+          path: "posts/:id",
+          element: (
+            <ProtectRoute>
+              <PostDetails />
             </ProtectRoute>
           ),
         },

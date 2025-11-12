@@ -1,65 +1,92 @@
-import React, { useState, useRef, useCallback } from "react";
-import { FiImage, FiX, FiSend } from "react-icons/fi";
-import Button from "../components/UI/Button";
-import Card from "../components/UI/Card";
+import {useState, useRef, useCallback} from 'react'
+import {FiImage, FiX, FiSend} from 'react-icons/fi'
+import {useNavigate} from 'react-router-dom'
+import {CreatePost as CreatePostService} from '../services/postService'
+import Button from '../components/UI/Button'
+import Card from '../components/UI/Card'
 
-const MAX_IMAGE_SIZE_MB = 5;
+const MAX_IMAGE_SIZE_MB = 5
 const ALLOWED_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-];
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif'
+]
 
 const CreatePost = () => {
-  const [body, setBody] = useState("");
-  const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [body, setBody] = useState('')
+  const [error, setError] = useState('')
+  const [selectedImage, setSelectedImage] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+  const navigate = useNavigate()
+  const createPost = CreatePostService()
 
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef(null)
 
   const validateImage = useCallback((file) => {
-    if (!file) return false;
+    if (!file) return false
 
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      setError("kind of file not supported (JPEG, PNG, WebP, GIF)");
-      return false;
+      setError('kind of file not supported (JPEG, PNG, WebP, GIF)')
+      return false
     }
 
     if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
-      setError(`Image size should be less than ${MAX_IMAGE_SIZE_MB} MB`);
-      return false;
+      setError(`Image size should be less than ${MAX_IMAGE_SIZE_MB} MB`)
+      return false
     }
 
-    return true;
-  }, []);
+    return true
+  }, [])
 
   const handleImageChange = useCallback(
     (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+      const file = e.target.files[0]
+      if (!file) return
 
-      if (!validateImage(file)) return;
+      if (!validateImage(file)) return
 
-      setSelectedImage(file);
-      setImagePreview(URL.createObjectURL(file));
-      setError("");
+      setSelectedImage(file)
+      setImagePreview(URL.createObjectURL(file))
+      setError('')
     },
     [validateImage]
-  );
+  )
 
   const removeImage = useCallback(() => {
     if (imagePreview) {
-      URL.revokeObjectURL(imagePreview);
+      URL.revokeObjectURL(imagePreview)
     }
-    setSelectedImage(null);
-    setImagePreview(null);
+    setSelectedImage(null)
+    setImagePreview(null)
     if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      fileInputRef.current.value = ''
     }
-  }, [imagePreview]);
+  }, [imagePreview])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    if (!body.trim() && !selectedImage) {
+      setError('Please add some content or an image')
+      return
+    }
+
+    setError('')
+
+    try {
+      const formData = new FormData()
+      formData.append('body', body)
+      if (selectedImage) {
+        formData.append('image', selectedImage, selectedImage.name)
+      }
+
+      await createPost.mutateAsync(formData)
+      navigate('/posts')
+    } catch (err) {
+      setError(err?.message || 'Failed to create post')
+    }
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
@@ -68,7 +95,7 @@ const CreatePost = () => {
       </h1>
 
       <Card className="shadow-lg">
-        <form className="space-y-4 p-4">
+        <form onSubmit={handleSubmit} className="space-y-4 p-4">
           {/* Error Message */}
           {error && (
             <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100 text-right">
@@ -102,6 +129,7 @@ const CreatePost = () => {
                   src={imagePreview}
                   alt="Image Preview"
                   className="w-full max-h-96 object-cover"
+                  loading="eager"
                 />
                 <button
                   type="button"
@@ -121,7 +149,7 @@ const CreatePost = () => {
               <input
                 type="file"
                 ref={fileInputRef}
-                accept={ALLOWED_IMAGE_TYPES.join(",")}
+                accept={ALLOWED_IMAGE_TYPES.join(',')}
                 onChange={handleImageChange}
                 className="hidden"
                 id="image-upload"
@@ -137,17 +165,18 @@ const CreatePost = () => {
 
             <Button
               type="submit"
-              disabled={isSubmitting || (!body.trim() && !selectedImage)}
-              loading={isSubmitting}
+              disabled={
+                createPost.isPending || (!body.trim() && !selectedImage)
+              }
               icon={<FiSend size={18} className="ml-2" />}
             >
-              نشر
+              {createPost.isPending ? 'Publishing...' : 'Publish'}
             </Button>
           </div>
         </form>
       </Card>
     </div>
-  );
-};
+  )
+}
 
-export default CreatePost;
+export default CreatePost

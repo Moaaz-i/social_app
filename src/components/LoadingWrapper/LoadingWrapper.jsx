@@ -1,10 +1,8 @@
-import React from "react";
 import Loading from "../Loading/Loading";
 import useLoading from "../../hooks/useLoading";
 
 const LoadingWrapper = ({ children, loadingText = "Loading..." }) => {
   const { loading } = useLoading();
-  console.log(loading);
 
   return (
     <>
@@ -15,4 +13,4 @@ const LoadingWrapper = ({ children, loadingText = "Loading..." }) => {
   );
 };
 
-export default React.memo(LoadingWrapper);
+export default LoadingWrapper;

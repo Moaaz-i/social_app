@@ -1,106 +1,96 @@
-import { createContext, useState, useCallback, useEffect, useMemo } from "react";
-import { http } from "../services/api";
-import { ENDPOINTS } from "../constants/apiEndpoints";
+import {
+  createContext,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef
+} from 'react'
+import {useGetProfile} from '../services/profileService'
 
-const AuthContext = createContext({});
+const AuthContext = createContext({})
 
-const AuthProvider = ({ children }) => {
-  const [userData, setUserData] = useState(null);
+const AuthProvider = ({children}) => {
+  const [userData, setUserData] = useState(null)
   const [storedToken, setStoredToken] = useState(
-    localStorage.getItem("access_token")
-  );
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+    localStorage.getItem('access_token')
+  )
+  const [error, setError] = useState(null)
+  const getProfile = useGetProfile({
+    enabled: !!localStorage.getItem('access_token'),
+    retry: false,
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  })
+  const hasSetUserData = useRef(false)
+
+  // Update userData when profile is loaded
+  useEffect(() => {
+    if (getProfile.isSuccess && getProfile?.data && !hasSetUserData.current) {
+      setUserData(getProfile.data)
+      hasSetUserData.current = true
+    } else if (getProfile.isError) {
+      hasSetUserData.current = false
+      setUserData(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getProfile.isSuccess, getProfile.isError])
+
+  // Compute isAuthenticated based on token and userData
+  const isAuthenticated = useMemo(() => {
+    return !!(storedToken && (userData || getProfile.isLoading))
+  }, [storedToken, userData, getProfile.isLoading])
 
   const checkToken = useCallback(() => {
     try {
-      const token = localStorage.getItem("access_token");
+      const token = localStorage.getItem('access_token')
       if (token) {
-        setStoredToken(token);
-        setError(null);
-        return true;
+        setStoredToken(token)
+        setError(null)
+        return true
       }
-      return false;
+      return false
     } catch (err) {
-      setError(err.message || "Token check failed");
-      return false;
+      setError(err.message || 'Token check failed')
+      return false
     }
-  }, []);
-
-  const checkUser = useCallback(async () => {
-    if (!storedToken) {
-      setUserData(null);
-      return false;
-    }
-    
-    try {
-      setIsLoading(true);
-      const response = await http.get(`/${ENDPOINTS.PROFILE}`);
-      setUserData(response);
-      setError(null);
-      return true;
-    } catch (err) {
-      setError(err.message || "User check failed");
-      setUserData(null);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [storedToken]);
-
-  useEffect(() => {
-    if (storedToken) {
-      checkUser();
-    } else {
-      setUserData(null);
-    }
-  }, [storedToken, checkUser]);
+  }, [])
 
   const login = useCallback(async (token) => {
-    try {
-      localStorage.setItem("access_token", token);
-      setStoredToken(token);
-      setError(null);
-      return true;
-    } catch (err) {
-      setError(err.message || "Login failed");
-      return false;
+    if (token) {
+      localStorage.setItem('access_token', token)
+      setStoredToken(token)
+      return true
     }
-  }, []);
+    return false
+  }, [])
 
   const logout = useCallback(() => {
     try {
-      localStorage.removeItem("access_token");
-      setStoredToken(null);
-      setUserData(null);
-      setError(null);
+      localStorage.removeItem('access_token')
+      setStoredToken(null)
+      setUserData(null)
+      setError(null)
+      hasSetUserData.current = false
     } catch (err) {
-      setError(err.message || "Logout failed");
+      setError(err.message || 'Logout failed')
     }
-  }, []);
+  }, [])
 
-  const isAuthenticatedValue = useMemo(() => {
-    return !!storedToken && !!userData;
-  }, [storedToken, userData]);
+  const value = useMemo(
+    () => ({
+      userData,
+      storedToken,
+      login,
+      logout,
+      checkToken,
+      isAuthenticated,
+      error
+    }),
+    [userData, storedToken, login, logout, checkToken, isAuthenticated, error]
+  )
 
-  // For backward compatibility, provide both the value and function versions
-  const isAuthenticated = useCallback(() => isAuthenticatedValue, [isAuthenticatedValue]);
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
 
-  const value = useMemo(() => ({
-    userData,
-    storedToken,
-    login,
-    logout,
-    checkToken,
-    checkUser,
-    isAuthenticated: isAuthenticatedValue, // Value version
-    isAuthenticatedFn: isAuthenticated,    // Function version
-    error,
-    isLoading,
-  }), [userData, storedToken, login, logout, checkToken, checkUser, isAuthenticatedValue, isAuthenticated, error, isLoading]);
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export { AuthContext };
-export default AuthProvider;
+export {AuthContext}
+export default AuthProvider

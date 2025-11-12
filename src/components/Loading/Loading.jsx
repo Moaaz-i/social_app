@@ -1,5 +1,3 @@
-import React from "react";
-
 const Loading = ({ fullScreen = true, text = "Loading..." }) => {
   return (
     <div

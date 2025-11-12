@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useSignup as useSignupService } from "../services/authService";
 
 const useSignup = () => {
@@ -7,7 +6,6 @@ const useSignup = () => {
   const [error, setError] = useState(null);
   const signupService = useSignupService();
 
-  const navigate = useNavigate();
   const signup = async (
     name,
     email,
@@ -16,22 +14,26 @@ const useSignup = () => {
     gender,
     dateOfBirth
   ) => {
-    const response = await signupService.mutate({
-      name,
-      email,
-      password,
-      rePassword,
-      gender,
-      dateOfBirth,
-    });
+    try {
+      const response = await signupService.mutateAsync({
+        name,
+        email,
+        password,
+        rePassword,
+        gender,
+        dateOfBirth,
+      });
 
-    if (response) {
-      setSignupData(response);
-      navigate("/login");
-    }
+      if (response) {
+        setSignupData(response);
+        return response;
+      }
 
-    if (response.error) {
-      setError(response.error);
+      return { error: "Signup failed" };
+    } catch (err) {
+      const errorMessage = err?.response?.data?.message || err?.message || "Signup failed";
+      setError(errorMessage);
+      return { error: errorMessage };
     }
   };
 

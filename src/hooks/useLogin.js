@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { useLogin as useLoginService } from "../services/authService";
 import useAuth from "./useAuth";
 
@@ -7,7 +6,6 @@ const useLogin = () => {
   const [loginData, setLoginData] = useState(null);
   const [error, setError] = useState(null);
   const { login } = useAuth();
-  const navigate = useNavigate();
   const loginService = useLoginService();
 
   const Login = useCallback(
@@ -38,7 +36,6 @@ const useLogin = () => {
         const userData = await login(result.token);
         if (userData) {
           setLoginData(result);
-          navigate("/");
           return result;
         }
 
@@ -55,7 +52,7 @@ const useLogin = () => {
         return { error: errorMessage };
       }
     },
-    [login, navigate, loginService]
+    [login, loginService]
   );
 
   return { Login, loginData, error };

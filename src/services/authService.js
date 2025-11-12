@@ -1,4 +1,4 @@
-import { useApiMutation, useApiQuery } from "./api";
+import { useApiMutation } from "./api";
 import { ENDPOINTS } from "../constants/apiEndpoints";
 
 export const useLogin = (options = {}) => {
@@ -20,29 +20,4 @@ export const useSignup = (options = {}) => {
       options.onSuccess?.(data, variables, context);
     },
   });
-};
-
-export const useGetProfile = (options = {}) => {
-  return useApiQuery("profile", `/${ENDPOINTS.PROFILE}`, {
-    ...options,
-    onSuccess: (data, variables, context) => {
-      options.onSuccess?.(data, variables, context);
-    },
-  });
-};
-
-export const useUpdateProfile = (options = {}) => {
-  return useApiMutation("put", `/${ENDPOINTS.UPLOAD_PHOTO}`, {
-    ...options,
-    onSuccess: (data, variables, context) => {
-      options.onSuccess?.(data, variables, context);
-    },
-  });
-};
-
-export default {
-  useLogin,
-  useSignup,
-  useGetProfile,
-  useUpdateProfile,
 };
