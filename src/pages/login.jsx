@@ -3,7 +3,7 @@ import {useForm} from 'react-hook-form'
 import {z} from 'zod'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {Link, useNavigate} from 'react-router-dom'
-import {FiMail, FiLock, FiLogIn} from 'react-icons/fi'
+import {FiMail, FiLock, FiLogIn, FiEye, FiEyeOff} from 'react-icons/fi'
 import useAuth from '../hooks/useAuth'
 import {useEffect, useState} from 'react'
 
@@ -11,6 +11,7 @@ const Login = () => {
   const navigate = useNavigate()
   const {userData} = useAuth()
   const [loginSuccess, setLoginSuccess] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
   const schema = z.object({
     email: z.string().email('Invalid email address'),
     password: z.string().min(6, 'Password must be at least 6 characters long')
@@ -141,12 +142,16 @@ const Login = () => {
                 </Link>
               </div>
               <div className="relative group">
-                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                  <FiLock className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-                </div>
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 z-10 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FiEye /> : <FiEyeOff />}
+                </button>
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   {...register('password')}
                   className={`block w-full pr-12 pl-4 py-3.5 border-2 ${
                     errors.password
