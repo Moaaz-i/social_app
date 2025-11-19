@@ -10,15 +10,13 @@ const ProtectAuth = ({children}) => {
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
-    
-    // If has token and is authenticated, redirect to home
+
     if (token && isAuthenticated) {
       navigate('/')
       setIsChecking(false)
       return
     }
 
-    // Wait for userData to load
     if (token && userData === null) {
       setIsChecking(true)
     } else {

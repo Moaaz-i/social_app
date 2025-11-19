@@ -23,7 +23,6 @@ const PostCard = memo(
   }) => {
     const {userData} = useAuth()
 
-    // Extract post data first
     const {
       _id: postId,
       body = '',
@@ -35,7 +34,6 @@ const PostCard = memo(
       commentsCount = postComments.length
     } = post || {}
 
-    // Then use them in state
     const [showAllComments, setShowAllComments] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
     const [editBody, setEditBody] = useState(body)
@@ -43,7 +41,6 @@ const PostCard = memo(
     const [editImagePreview, setEditImagePreview] = useState(image)
     const fileInputRef = useRef(null)
 
-    // Check if current user liked the post
     const isLiked = useCallback(
       () =>
         (userData?.user?._id &&
@@ -154,7 +151,6 @@ const PostCard = memo(
       [postId, onDeleteComment]
     )
 
-    // Optimize comment display
     const displayedComments = showAllComments
       ? [
           ...(postComments.sort(
@@ -317,9 +313,7 @@ const PostCard = memo(
 
             {/* Comments Section */}
             <div className="mt-4 border-t border-gray-100 pt-3">
-              <CommentForm
-                onSubmit={handleAddComment}
-              />
+              <CommentForm onSubmit={handleAddComment} />
 
               {postComments.length > 0 && (
                 <div className="mt-4 space-y-3">

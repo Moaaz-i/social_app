@@ -14,10 +14,9 @@ const AuthProvider = ({children}) => {
   const getProfile = useGetProfile({
     enabled: !!localStorage.getItem('access_token'),
     retry: false,
-    staleTime: 5 * 60 * 1000 // 5 minutes
+    staleTime: 5 * 60 * 1000
   })
 
-  // Update userData when profile is loaded
   useEffect(() => {
     if (getProfile.isSuccess && getProfile?.data) {
       setUserData(getProfile.data)
@@ -27,7 +26,6 @@ const AuthProvider = ({children}) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getProfile.isSuccess, getProfile.isError, getProfile.data])
 
-  // Compute isAuthenticated based on token and userData
   const isAuthenticated = useMemo(() => {
     return !!(storedToken && (userData || getProfile.isLoading))
   }, [storedToken, userData, getProfile.isLoading])
@@ -52,7 +50,6 @@ const AuthProvider = ({children}) => {
       if (token) {
         localStorage.setItem('access_token', token)
         setStoredToken(token)
-        // Invalidate and refetch profile query
         queryClient.invalidateQueries(['profile'])
         return true
       }
@@ -67,7 +64,6 @@ const AuthProvider = ({children}) => {
       setStoredToken(null)
       setUserData(null)
       setError(null)
-      // Clear profile query from cache
       queryClient.clear()
     } catch (err) {
       setError(err.message || 'Logout failed')

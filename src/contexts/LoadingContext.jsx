@@ -1,28 +1,27 @@
-import { createContext, useState, useEffect } from "react";
-import { subscribeToLoading } from "../services/api";
+import {createContext, useState, useEffect} from 'react'
+import {subscribeToLoading} from '../services/api'
 
-const LoadingContext = createContext({});
+const LoadingContext = createContext({})
 
-const LoadingProvider = ({ children }) => {
-  const [loading, setLoading] = useState(false);
+const LoadingProvider = ({children}) => {
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    // Subscribe to loading state from api.js
     const unsubscribe = subscribeToLoading((isLoading) => {
-      setLoading(isLoading);
-    });
+      setLoading(isLoading)
+    })
 
-    return unsubscribe;
-  }, []);
+    return unsubscribe
+  }, [])
 
   const value = {
-    loading,
-  };
+    loading
+  }
 
   return (
     <LoadingContext.Provider value={value}>{children}</LoadingContext.Provider>
-  );
-};
+  )
+}
 
-export { LoadingContext };
-export default LoadingProvider;
+export {LoadingContext}
+export default LoadingProvider

@@ -24,7 +24,6 @@ const useLogin = () => {
           password: password,
         });
 
-        // Set token and trigger profile fetch
         await login(result.token);
         setLoginData(result);
         return result;

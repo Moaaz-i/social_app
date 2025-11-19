@@ -6,7 +6,6 @@ const Comment = ({
   postOwnerId = '',
   onDeleteComment
 }) => {
-  // Add null checks for comment and comment.user
   const user = comment?.commentCreator || {}
   const isAuthorized =
     currentUserId === user?._id || currentUserId === postOwnerId

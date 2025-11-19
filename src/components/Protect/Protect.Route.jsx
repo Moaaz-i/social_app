@@ -10,16 +10,14 @@ const ProtectRoute = ({children}) => {
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
-    
+
     if (!token) {
       navigate('/login')
       setIsChecking(false)
       return
     }
 
-    // Wait for userData to load or confirm no auth
     if (!isAuthenticated && userData === null) {
-      // Still loading
       setIsChecking(true)
     } else if (!isAuthenticated) {
       navigate('/login')

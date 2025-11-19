@@ -45,7 +45,6 @@ const Home = () => {
   const [result, setResult] = useState(null)
   const {isOnline, forceDetect} = useOffline()
 
-  // Update image key when user photo changes
   useEffect(() => {
     if (user?.photo && !photoPreview) {
       setPhotoPreview(user?.photo)
@@ -53,7 +52,6 @@ const Home = () => {
     }
   }, [user?.photo, photoPreview])
 
-  // Use data directly from React Query
   const userPosts = getUserPosts?.data?.posts || []
 
   const handleAddComment = async (postId, content) => {
@@ -142,19 +140,16 @@ const Home = () => {
     const file = e.target.files[0]
     if (!file) return
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image file')
       return
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Image size should be less than 5MB')
       return
     }
 
-    // Show preview immediately
     const previewUrl = URL.createObjectURL(file)
     setPhotoPreview(previewUrl)
 
@@ -171,7 +166,6 @@ const Home = () => {
         setIsUploadingPhoto(false)
         setPhotoPreview(user?.photo)
 
-        // Handle large image error (HTTP 413) with Arabic message
         const status = error?.response?.status || error?.status
 
         let message
@@ -203,7 +197,6 @@ const Home = () => {
     } catch (error) {
       setPhotoPreview(user?.photo)
 
-      // Handle large image error (HTTP 413) with Arabic message
       const status = error?.response?.status || error?.status
 
       let message

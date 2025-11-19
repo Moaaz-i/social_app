@@ -24,7 +24,6 @@ const PostDetails = () => {
   const likePost = LikePost()
   const deleteCommentMutation = DeleteComment()
 
-  // Get the single post
   const post = getPost?.data?.post
   const isLoading = getPost.isLoading
   const error = getPost.error
@@ -48,18 +47,15 @@ const PostDetails = () => {
 
   const handleUpdatePost = async (postId, formData) => {
     return new Promise((resolve, reject) => {
-      updatePost.mutate(
-        formData,
-        {
-          onSuccess: () => {
-            getPost.refetch()
-            resolve()
-          },
-          onError: (error) => {
-            reject(error)
-          }
+      updatePost.mutate(formData, {
+        onSuccess: () => {
+          getPost.refetch()
+          resolve()
+        },
+        onError: (error) => {
+          reject(error)
         }
-      )
+      })
     })
   }
 

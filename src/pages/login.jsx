@@ -11,13 +11,12 @@ const Login = () => {
   const navigate = useNavigate()
   const {userData} = useAuth()
   const [loginSuccess, setLoginSuccess] = useState(false)
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false)
   const schema = z.object({
     email: z.string().email('Invalid email address'),
     password: z.string().min(6, 'Password must be at least 6 characters long')
   })
 
-  // Navigate to home when userData is available after successful login
   useEffect(() => {
     if (loginSuccess && userData) {
       navigate('/')
@@ -151,7 +150,7 @@ const Login = () => {
                 </button>
                 <input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   {...register('password')}
                   className={`block w-full pr-12 pl-4 py-3.5 border-2 ${
                     errors.password

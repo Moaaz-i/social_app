@@ -31,8 +31,6 @@ const Posts = () => {
   const likePost = LikePost()
   const deleteComment = DeleteComment()
   const getUserPosts = GetUserPosts(userData?.user?._id)
-
-  // Use data directly from React Query
   const posts = getPosts?.data?.posts || []
   const userPosts = getUserPosts?.data?.posts || []
   const allPosts = [...posts, ...userPosts].sort(
