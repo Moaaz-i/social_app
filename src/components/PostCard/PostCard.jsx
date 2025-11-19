@@ -318,23 +318,19 @@ const PostCard = memo(
               {postComments.length > 0 && (
                 <div className="mt-4 space-y-3">
                   {displayedComments.map((comment) => {
-                    const commentUser = comment?.commentCreator || {}
                     const commentId = comment?._id
-                    const commentAuthorId = commentUser?._id
-                    const manageComment =
-                      userData?.user?._id === commentAuthorId
-
-                    if (!commentId) return null
+                    const commentUser = comment?.commentCreator || {}
+                    const postUser = user || {}
 
                     return (
                       <Comment
                         key={commentId}
                         comment={comment}
-                        currentUserId={userData?.user?._id}
+                        currentUser={userData}
+                        postUser={postUser}
                         onDeleteComment={() =>
-                          handleDeleteComment(commentId, userData, commentUser)
+                          handleDeleteComment(commentId, userData, postUser)
                         }
-                        canDelete={manageComment}
                       />
                     )
                   })}

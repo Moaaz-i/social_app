@@ -2,13 +2,12 @@ import {formatDistanceToNow} from 'date-fns'
 
 const Comment = ({
   comment = {},
-  currentUserId = '',
-  postOwnerId = '',
-  onDeleteComment
+  currentUser = '',
+  onDeleteComment,
+  postUser
 }) => {
   const user = comment?.commentCreator || {}
-  const isAuthorized =
-    currentUserId === user?._id || currentUserId === postOwnerId
+  const isAuthorized = currentUser?.user?._id === postUser?._id
 
   return (
     <div className="flex items-start group">
@@ -32,7 +31,7 @@ const Comment = ({
           </div>
           {isAuthorized && (
             <button
-              onClick={() => onDeleteComment(comment._id)}
+              onClick={onDeleteComment}
               className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
               title="Delete comment"
             >
