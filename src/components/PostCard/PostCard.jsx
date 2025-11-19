@@ -319,7 +319,6 @@ const PostCard = memo(
                 <div className="mt-4 space-y-3">
                   {displayedComments.map((comment) => {
                     const commentId = comment?._id
-                    const commentUser = comment?.commentCreator || {}
                     const postUser = user || {}
 
                     return (
