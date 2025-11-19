@@ -84,7 +84,12 @@ const CreatePost = () => {
       await createPost.mutateAsync(formData)
       navigate('/posts')
     } catch (err) {
-      setError(err?.message || 'Failed to create post')
+      const status = err?.response?.status || err?.status
+      if (status === 413) {
+        setError('حجم الصورة كبير، الرجاء اختيار صورة أصغر')
+      } else {
+        setError(err?.message || 'Failed to create post')
+      }
     }
   }
 

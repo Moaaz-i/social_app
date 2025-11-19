@@ -20,8 +20,11 @@ import {
   FiCheckCircle,
   FiUser,
   FiFileText,
-  FiPlusCircle
+  FiPlusCircle,
+  FiWifiOff,
+  FiRefreshCw
 } from 'react-icons/fi'
+import useOffline from '../hooks/useOffline'
 
 const Home = () => {
   const {userData, logout} = useAuth()
@@ -38,6 +41,9 @@ const Home = () => {
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [photoPreview, setPhotoPreview] = useState(null)
   const [imageKey, setImageKey] = useState(Date.now())
+  const [errorPhoto, setErrorPhoto] = useState(null)
+  const [result, setResult] = useState(null)
+  const {isOnline, forceDetect} = useOffline()
 
   // Update image key when user photo changes
   useEffect(() => {
@@ -154,26 +160,68 @@ const Home = () => {
 
     setIsUploadingPhoto(true)
 
-    try {
-      const formData = new FormData()
-      formData.append('photo', file)
+    const formData = new FormData()
+    formData.append('photo', file)
 
-      await uploadPhoto.mutateAsync(formData)
-      toast.success('Photo updated successfully!')
+    const result1 = await uploadPhoto.mutateAsync(formData, {
+      onSuccess: () => {
+        setIsUploadingPhoto(false)
+      },
+      onError: (error) => {
+        setIsUploadingPhoto(false)
+        setPhotoPreview(user?.photo)
+
+        // Handle large image error (HTTP 413) with Arabic message
+        const status = error?.response?.status || error?.status
+
+        let message
+        if (status === 413) {
+          message = 'Image size should be less than 5MB'
+        } else if (typeof error === 'string') {
+          message = error
+        } else if (error?.message) {
+          message = error.message
+        } else {
+          message = 'Failed to upload photo'
+        }
+
+        setErrorPhoto(message)
+        console.error('Failed to upload photo:', error)
+        toast.error(message)
+      }
+    })
+
+    try {
+      setErrorPhoto(null)
+      const result = await uploadPhoto.mutateAsync(formData)
+      setResult(result)
 
       setTimeout(() => {
         setImageKey(Date.now())
       }, 500)
+      console.log(result)
     } catch (error) {
-      console.error('Failed to upload photo:', error)
-      toast.error(error?.message || 'Failed to upload photo')
-
       setPhotoPreview(user?.photo)
+
+      // Handle large image error (HTTP 413) with Arabic message
+      const status = error?.response?.status || error?.status
+
+      let message
+      if (status === 413) {
+        message = 'Image size should be less than 5MB'
+      } else if (typeof error === 'string') {
+        message = error
+      } else if (error?.message) {
+        message = error.message
+      } else {
+        message = 'Failed to upload photo'
+      }
+
+      setErrorPhoto(message)
+      console.error('Failed to upload photo:', error)
+      toast.error(message)
     } finally {
       setIsUploadingPhoto(false)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
     }
   }
 
@@ -242,6 +290,12 @@ const Home = () => {
                     {user?.isVerified ? 'Verified' : 'Not Verified'}
                   </span>
                 </div>
+
+                {errorPhoto && (
+                  <div className="flex items-center justify-center md:justify-start gap-2 mt-5 bg-gradient-to-r from-red-300 to-pink-300 text-white p-2 rounded-xl">
+                    <p className="text-white text-sm">{errorPhoto}</p>
+                  </div>
+                )}
               </div>
 
               <button
@@ -315,7 +369,36 @@ const Home = () => {
           </div>
 
           <div className="p-6">
-            {userPosts.length > 0 ? (
+            {!isOnline ? (
+              <div className="bg-white rounded-3xl shadow-lg p-10 md:p-16 text-center border border-red-100">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-50 via-orange-50 to-rose-100 rounded-2xl mb-6 border border-red-100">
+                  <FiWifiOff className="w-10 h-10 text-red-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  You are offline
+                </h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  Please check your internet connection. Once you are back
+                  online, your posts will refresh automatically.
+                </p>
+                <button
+                  onClick={forceDetect}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
+                >
+                  <FiRefreshCw className="w-5 h-5" />
+                  Retry connection
+                </button>
+              </div>
+            ) : getUserPosts.isLoading ? (
+              <div className="bg-white rounded-3xl shadow-lg p-16 text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full mb-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent"></div>
+                </div>
+                <p className="text-gray-600 font-semibold">
+                  Loading your posts...
+                </p>
+              </div>
+            ) : userPosts.length > 0 ? (
               <div className="space-y-4">
                 {userPosts.map((post) => (
                   <PostCard

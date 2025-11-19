@@ -10,11 +10,19 @@ import {
   UpdatePost
 } from '../services/postService'
 import {useNavigate} from 'react-router-dom'
-import {FiPlusCircle, FiTrendingUp, FiFilter} from 'react-icons/fi'
+import {
+  FiPlusCircle,
+  FiTrendingUp,
+  FiFilter,
+  FiWifiOff,
+  FiRefreshCw
+} from 'react-icons/fi'
+import useOffline from '../hooks/useOffline'
 
 const Posts = () => {
   const navigate = useNavigate()
   const {userData} = useAuth()
+  const {isOnline, forceDetect} = useOffline()
 
   const getPosts = GetAllPosts()
   const createComment = CreateComment()
@@ -68,19 +76,16 @@ const Posts = () => {
 
   const handleUpdatePost = async (postId, formData) => {
     return new Promise((resolve, reject) => {
-      updatePost.mutate(
-        formData,
-        {
-          onSuccess: () => {
-            getPosts.refetch()
-            getUserPosts.refetch()
-            resolve()
-          },
-          onError: (error) => {
-            reject(error)
-          }
+      updatePost.mutate(formData, {
+        onSuccess: () => {
+          getPosts.refetch()
+          getUserPosts.refetch()
+          resolve()
+        },
+        onError: (error) => {
+          reject(error)
         }
-      )
+      })
     })
   }
 
@@ -126,7 +131,7 @@ const Posts = () => {
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5"></div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full blur-3xl opacity-10"></div>
-          
+
           <div className="relative p-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
@@ -138,9 +143,11 @@ const Posts = () => {
                     Discover Posts
                   </h1>
                 </div>
-                <p className="text-gray-600 ml-1">Explore what's happening in the community</p>
+                <p className="text-gray-600 ml-1">
+                  Explore what's happening in the community
+                </p>
               </div>
-              
+
               <button
                 onClick={() => navigate('/posts/create')}
                 className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 whitespace-nowrap"
@@ -149,20 +156,32 @@ const Posts = () => {
                 Create Post
               </button>
             </div>
-            
+
             {/* Stats */}
             <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4 border border-blue-200">
-                <p className="text-blue-600 text-sm font-semibold mb-1">Total Posts</p>
-                <p className="text-2xl font-black text-blue-700">{allPosts.length}</p>
+                <p className="text-blue-600 text-sm font-semibold mb-1">
+                  Total Posts
+                </p>
+                <p className="text-2xl font-black text-blue-700">
+                  {allPosts.length}
+                </p>
               </div>
               <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-4 border border-purple-200">
-                <p className="text-purple-600 text-sm font-semibold mb-1">Your Posts</p>
-                <p className="text-2xl font-black text-purple-700">{userPosts.length}</p>
+                <p className="text-purple-600 text-sm font-semibold mb-1">
+                  Your Posts
+                </p>
+                <p className="text-2xl font-black text-purple-700">
+                  {userPosts.length}
+                </p>
               </div>
               <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-2xl p-4 border border-pink-200 col-span-2 md:col-span-1">
-                <p className="text-pink-600 text-sm font-semibold mb-1">Community</p>
-                <p className="text-2xl font-black text-pink-700">{posts.length}</p>
+                <p className="text-pink-600 text-sm font-semibold mb-1">
+                  Community
+                </p>
+                <p className="text-2xl font-black text-pink-700">
+                  {posts.length}
+                </p>
               </div>
             </div>
           </div>
@@ -170,12 +189,34 @@ const Posts = () => {
 
         {/* Posts Feed */}
         <div className="space-y-4">
-          {getPosts.isLoading && getUserPosts.isLoading ? (
+          {!isOnline ? (
+            <div className="bg-white rounded-3xl shadow-lg p-10 md:p-16 text-center border border-red-100">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-50 via-orange-50 to-rose-100 rounded-2xl mb-6 border border-red-100">
+                <FiWifiOff className="w-10 h-10 text-red-500" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                You are offline
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Please check your internet connection. Once you are back online,
+                your feed will refresh automatically.
+              </p>
+              <button
+                onClick={forceDetect}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
+              >
+                <FiRefreshCw className="w-5 h-5" />
+                Retry connection
+              </button>
+            </div>
+          ) : getPosts.isLoading && getUserPosts.isLoading ? (
             <div className="bg-white rounded-3xl shadow-lg p-16 text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full mb-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent"></div>
               </div>
-              <p className="text-gray-600 font-semibold">Loading amazing posts...</p>
+              <p className="text-gray-600 font-semibold">
+                Loading amazing posts...
+              </p>
             </div>
           ) : allPosts.length === 0 ? (
             <div className="bg-white rounded-3xl shadow-lg p-16 text-center">
@@ -204,9 +245,11 @@ const Posts = () => {
                   <FiFilter className="w-5 h-5" />
                   <span className="font-semibold">Sorted by: Latest</span>
                 </div>
-                <span className="text-sm text-gray-500">{allPosts.length} posts</span>
+                <span className="text-sm text-gray-500">
+                  {allPosts.length} posts
+                </span>
               </div>
-              
+
               {/* Posts List */}
               {allPosts.map((post) => (
                 <PostCard

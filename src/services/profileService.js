@@ -19,6 +19,12 @@ export const useUploadPhoto = (options = {}) => {
     skipLoading: true,
     invalidateQueries: ["profile"],
     ...options,
+    onSuccess: (data, variables, context) => {
+      options.onSuccess?.(data, variables, context);
+    },
+    onError: (error, variables, context) => {
+      options.onError?.(error, variables, context);
+    },
   });
 };
 
