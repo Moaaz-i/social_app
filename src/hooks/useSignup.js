@@ -29,9 +29,8 @@ const useSignup = () => {
         return response;
       }
 
-      return { error: "Signup failed" };
     } catch (error) {
-      const errorMessage = error.error || "Signup failed";
+      const errorMessage = error || "Signup failed";
       setError(errorMessage);
       return { error: errorMessage };
     }

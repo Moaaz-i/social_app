@@ -67,16 +67,24 @@ http.interceptors.response.use(
     if (!error.config?.skipLoading) {
       stopLoading();
     }
-    
-    const errorMessage = error.response?.data?.message || error.response?.data || "An error occurred";
 
-    if (error.response?.status === 401) {
-      toast.error(errorMessage)
-    } else {
-      toast.error(errorMessage);
+    const rawData = error.response?.data;
+    let message =
+      typeof rawData === "string"
+        ? rawData
+        : rawData?.message || rawData?.error || "An error occurred";
+
+    if (typeof message !== "string") {
+      message = String(message);
     }
 
-    return Promise.reject(errorMessage);
+    if (error.response?.status === 401) {
+      toast.error(message);
+    } else {
+      toast.error(message);
+    }
+
+    return Promise.reject(message);
   }
 );
 

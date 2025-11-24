@@ -6,7 +6,7 @@ export const ENDPOINTS = {
   UPLOAD_PHOTO: `users/upload-photo`,
   CHANGE_PASSWORD: `users/change-password`,
 
-  POSTS: `posts`,
+  POSTS: `posts?limit=1000`,
   POST_BY_ID: (id) => `posts/${id}`,
   USER_POSTS: (userId) => `users/${userId}/posts`,
 

@@ -30,7 +30,7 @@ const useLogin = () => {
       } catch (err) {
         console.error("Login error:", err);
         const errorMessage =
-          err.error ||
+          err ||
           "Login failed. Please try again.";
         setError(errorMessage);
         return { error: errorMessage };
