@@ -180,7 +180,6 @@ const Home = () => {
         }
 
         setErrorPhoto(message)
-        console.error('Failed to upload photo:', error)
         toast.error(message)
       }
     })
@@ -193,7 +192,6 @@ const Home = () => {
       setTimeout(() => {
         setImageKey(Date.now())
       }, 500)
-      console.log(result)
     } catch (error) {
       setPhotoPreview(user?.photo)
 
@@ -211,7 +209,6 @@ const Home = () => {
       }
 
       setErrorPhoto(message)
-      console.error('Failed to upload photo:', error)
       toast.error(message)
     } finally {
       setIsUploadingPhoto(false)

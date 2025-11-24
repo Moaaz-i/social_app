@@ -104,7 +104,6 @@ const PostCard = memo(
         await onPostUpdated(postId, formData)
         setIsEditing(false)
       } catch (error) {
-        console.error('Failed to update post:', error)
         toast.error(error.message || 'Failed to update post')
       }
     }, [editBody, editImage, editImagePreview, postId, onPostUpdated])
@@ -125,7 +124,6 @@ const PostCard = memo(
           await onAddComment(postId, data.comment)
           toast.success('Comment added successfully')
         } catch (error) {
-          console.error('Failed to add comment:', error)
           toast.error(error || 'Failed to add comment')
         }
       },
@@ -141,7 +139,6 @@ const PostCard = memo(
             await onDeleteComment(postId, commentId)
             toast.success('Comment deleted successfully')
           } catch (error) {
-            console.error('Failed to delete comment:', error)
             toast.error(error.message || 'Failed to delete comment')
           }
         } else {

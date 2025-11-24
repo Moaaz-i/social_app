@@ -28,7 +28,6 @@ const useLogin = () => {
         setLoginData(result);
         return result;
       } catch (err) {
-        console.error("Login error:", err);
         const errorMessage =
           err ||
           "Login failed. Please try again.";
