@@ -2,6 +2,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import { API_BASE_URL } from "../config.js";
+import { TaskPulse } from "cronflex";
+
+const dbWriteQueue = new TaskPulse({
+  concurrency: 1, // Only 1 write to MongoDB at a time to prevent race conditions
+  rateMax: 5,     // Limit rate of writes
+  rateWindow: 1000,
+});
 
 const http = axios.create({
   baseURL: API_BASE_URL,
@@ -49,18 +56,30 @@ const fetchMockDB = async () => {
 };
 
 const saveMockDB = async (db) => {
-  try {
-    const response = await fetch("/local-db-api", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+  return new Promise((resolve, reject) => {
+    dbWriteQueue.add(
+      {
+        id: `save-db-${Date.now()}`,
+        priority: 1
       },
-      body: JSON.stringify(db, null, 2),
-    });
-    if (!response.ok) throw new Error("Failed to save database");
-  } catch (e) {
-    console.error("Could not sync database to MongoDB", e);
-  }
+      async () => {
+        try {
+          const response = await fetch("/local-db-api", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(db, null, 2),
+          });
+          if (!response.ok) throw new Error("Failed to save database");
+          resolve();
+        } catch (e) {
+          console.error("Could not sync database to MongoDB", e);
+          reject(e);
+        }
+      }
+    );
+  });
 };
 
 const getCurrentUser = (db) => {
