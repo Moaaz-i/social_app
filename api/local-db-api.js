@@ -7,7 +7,21 @@ let clientPromise;
 if (!uri) {
   console.warn('MONGODB_URI is not set. Database persistence will not work on Vercel.');
 } else {
-  client = new MongoClient(uri);
+  let finalUri = uri;
+  // If connection string doesn't specify authSource, route to admin database
+  if (!uri.includes("authSource")) {
+    const baseUrl = uri.split("?")[0];
+    const query = uri.split("?")[1] || "";
+    const hasDb = baseUrl.split("/").length > 3 && baseUrl.split("/")[3] !== "";
+    
+    if (hasDb) {
+      finalUri = baseUrl + (query ? `?${query}&` : "?") + "authSource=admin";
+    } else {
+      finalUri = baseUrl.replace(/\/$/, "") + "/admin" + (query ? `?${query}&` : "?") + "authSource=admin";
+    }
+  }
+  
+  client = new MongoClient(finalUri);
   clientPromise = client.connect();
 }
 

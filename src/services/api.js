@@ -1,15 +1,15 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "react-hot-toast";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { API_BASE_URL } from "../config.js";
 import { TaskPulse } from "cronflex";
+import { toast } from "react-hot-toast";
+import { API_BASE_URL } from "../config.js";
 
 let dbWriteQueue = null;
 const getWriteQueue = () => {
   if (typeof window !== "undefined" && !dbWriteQueue) {
     dbWriteQueue = new TaskPulse({
       concurrency: 1, // Only 1 write to MongoDB at a time to prevent race conditions
-      rateMax: 5,     // Limit rate of writes
+      rateMax: 5, // Limit rate of writes
       rateWindow: 1000,
     });
   }
@@ -21,7 +21,7 @@ const http = axios.create({
   timeout: 10000,
 });
 
-export const subscribeToLoading = (callback) => {
+export const subscribeToLoading = () => {
   return () => {};
 };
 
@@ -34,7 +34,8 @@ const defaultFallbackDB = {
       password: "password",
       dateOfBirth: "1995-01-01",
       gender: "male",
-      photo: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
+      photo:
+        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200",
     },
     {
       _id: "u_admin",
@@ -43,10 +44,11 @@ const defaultFallbackDB = {
       password: "password",
       dateOfBirth: "1990-01-01",
       gender: "male",
-      photo: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=200"
-    }
+      photo:
+        "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=200",
+    },
   ],
-  posts: []
+  posts: [],
 };
 
 // Helper to initialize and retrieve mock database
@@ -93,8 +95,8 @@ const saveMockDB = async (db) => {
       }
     },
     {
-      priority: 1
-    }
+      priority: 1,
+    },
   )(db);
 };
 
@@ -102,7 +104,7 @@ const getCurrentUser = (db) => {
   const token = localStorage.getItem("access_token");
   if (!token) return null;
   const userId = token.replace("fake-token-", "");
-  return db.users.find(u => u._id === userId) || null;
+  return db.users.find((u) => u._id === userId) || null;
 };
 
 const fileToDataURL = (file) => {
@@ -138,7 +140,7 @@ const fileToDataURL = (file) => {
         canvas.height = height;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, width, height);
-        
+
         // Convert to highly compressed JPEG (0.6 quality)
         resolve(canvas.toDataURL("image/jpeg", 0.6));
       };
@@ -155,11 +157,11 @@ const fileToDataURL = (file) => {
 // Router function to process calls locally
 const handleMockRequest = async (method, url, data) => {
   // Simulate network latency
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
   const db = await fetchMockDB();
   const currentUser = getCurrentUser(db);
-  
+
   const normalizedUrl = url.startsWith("/") ? url.slice(1) : url;
   const cleanUrl = normalizedUrl.split("?")[0];
 
@@ -174,7 +176,9 @@ const handleMockRequest = async (method, url, data) => {
   // 1. SIGNIN
   if (cleanUrl === "users/signin" && method.toLowerCase() === "post") {
     const { email, password } = data || {};
-    const user = db.users.find(u => u.email === email && u.password === password);
+    const user = db.users.find(
+      (u) => u.email === email && u.password === password,
+    );
     if (!user) {
       throw new Error("Invalid email or password");
     }
@@ -185,7 +189,7 @@ const handleMockRequest = async (method, url, data) => {
   // 2. SIGNUP
   if (cleanUrl === "users/signup" && method.toLowerCase() === "post") {
     const { name, email, password, dateOfBirth, gender } = data || {};
-    if (db.users.some(u => u.email === email)) {
+    if (db.users.some((u) => u.email === email)) {
       throw new Error("Email already exists");
     }
     const newUser = {
@@ -195,7 +199,7 @@ const handleMockRequest = async (method, url, data) => {
       password,
       dateOfBirth,
       gender,
-      photo: ""
+      photo: "",
     };
     db.users.push(newUser);
     await saveMockDB(db);
@@ -217,21 +221,23 @@ const handleMockRequest = async (method, url, data) => {
       const dataUrl = await fileToDataURL(photoFile);
       if (dataUrl) photoUrl = dataUrl;
     }
-    
+
     // Update user profile pic in db
-    db.users = db.users.map(u => u._id === currentUser._id ? { ...u, photo: photoUrl } : u);
-    
+    db.users = db.users.map((u) =>
+      u._id === currentUser._id ? { ...u, photo: photoUrl } : u,
+    );
+
     // Update creator profile pic in all their posts and comments
-    db.posts = db.posts.map(post => {
+    db.posts = db.posts.map((post) => {
       let updatedPost = { ...post };
       if (post.user._id === currentUser._id) {
         updatedPost.user = { ...post.user, photo: photoUrl };
       }
       if (post.comments) {
-        updatedPost.comments = post.comments.map(c => 
-          c.commentCreator._id === currentUser._id 
-            ? { ...c, commentCreator: { ...c.commentCreator, photo: photoUrl } } 
-            : c
+        updatedPost.comments = post.comments.map((c) =>
+          c.commentCreator._id === currentUser._id
+            ? { ...c, commentCreator: { ...c.commentCreator, photo: photoUrl } }
+            : c,
         );
       }
       return updatedPost;
@@ -245,21 +251,30 @@ const handleMockRequest = async (method, url, data) => {
   if (cleanUrl === "users/update-profile" && method.toLowerCase() === "put") {
     if (!currentUser) throw new Error("Unauthorized");
     const { bio, banner } = data || {};
-    db.users = db.users.map(u => 
-      u._id === currentUser._id 
-        ? { ...u, bio: bio !== undefined ? bio : u.bio, banner: banner !== undefined ? banner : u.banner } 
-        : u
+    db.users = db.users.map((u) =>
+      u._id === currentUser._id
+        ? {
+            ...u,
+            bio: bio !== undefined ? bio : u.bio,
+            banner: banner !== undefined ? banner : u.banner,
+          }
+        : u,
     );
     await saveMockDB(db);
-    const updatedUser = db.users.find(u => u._id === currentUser._id);
+    const updatedUser = db.users.find((u) => u._id === currentUser._id);
     return { message: "success", user: updatedUser };
   }
 
   // 5. CHANGE PASSWORD
-  if (cleanUrl === "users/change-password" && method.toLowerCase() === "patch") {
+  if (
+    cleanUrl === "users/change-password" &&
+    method.toLowerCase() === "patch"
+  ) {
     if (!currentUser) throw new Error("Unauthorized");
     const { password } = data || {};
-    db.users = db.users.map(u => u._id === currentUser._id ? { ...u, password } : u);
+    db.users = db.users.map((u) =>
+      u._id === currentUser._id ? { ...u, password } : u,
+    );
     await saveMockDB(db);
     return { message: "success" };
   }
@@ -270,17 +285,21 @@ const handleMockRequest = async (method, url, data) => {
   }
 
   // GET USER POSTS (e.g. users/userId/posts)
-  if (normalizedUrl.startsWith("users/") && normalizedUrl.endsWith("/posts") && method.toLowerCase() === "get") {
+  if (
+    normalizedUrl.startsWith("users/") &&
+    normalizedUrl.endsWith("/posts") &&
+    method.toLowerCase() === "get"
+  ) {
     const parts = normalizedUrl.split("/");
     const userId = parts[1];
-    const userPosts = db.posts.filter(p => p.user._id === userId);
+    const userPosts = db.posts.filter((p) => p.user._id === userId);
     return { message: "success", posts: userPosts };
   }
 
   // 7. GET POST BY ID
   const postIdForGet = getUrlId("posts/");
   if (postIdForGet && method.toLowerCase() === "get") {
-    const post = db.posts.find(p => p._id === postIdForGet);
+    const post = db.posts.find((p) => p._id === postIdForGet);
     if (!post) throw new Error("Post not found");
     return { message: "success", post };
   }
@@ -311,11 +330,11 @@ const handleMockRequest = async (method, url, data) => {
       user: {
         _id: currentUser._id,
         name: currentUser.name,
-        photo: currentUser.photo
+        photo: currentUser.photo,
       },
       createdAt: new Date().toISOString(),
       likes: [],
-      comments: []
+      comments: [],
     };
 
     db.posts.unshift(newPost);
@@ -341,24 +360,26 @@ const handleMockRequest = async (method, url, data) => {
       keepExistingImage = data.image === undefined;
     }
 
-    db.posts = await Promise.all(db.posts.map(async (p) => {
-      if (p._id === postIdForPut) {
-        if (p.user._id !== currentUser._id) throw new Error("Forbidden");
-        let imageUrl = p.image;
-        if (!keepExistingImage) {
-          imageUrl = imageFile ? await fileToDataURL(imageFile) : "";
+    db.posts = await Promise.all(
+      db.posts.map(async (p) => {
+        if (p._id === postIdForPut) {
+          if (p.user._id !== currentUser._id) throw new Error("Forbidden");
+          let imageUrl = p.image;
+          if (!keepExistingImage) {
+            imageUrl = imageFile ? await fileToDataURL(imageFile) : "";
+          }
+          return {
+            ...p,
+            body: body || p.body,
+            image: imageUrl,
+          };
         }
-        return {
-          ...p,
-          body: body || p.body,
-          image: imageUrl
-        };
-      }
-      return p;
-    }));
+        return p;
+      }),
+    );
 
     await saveMockDB(db);
-    const updatedPost = db.posts.find(p => p._id === postIdForPut);
+    const updatedPost = db.posts.find((p) => p._id === postIdForPut);
     return { message: "success", post: updatedPost };
   }
 
@@ -366,11 +387,11 @@ const handleMockRequest = async (method, url, data) => {
   const postIdForDelete = getUrlId("posts/");
   if (postIdForDelete && method.toLowerCase() === "delete") {
     if (!currentUser) throw new Error("Unauthorized");
-    const postToDelete = db.posts.find(p => p._id === postIdForDelete);
+    const postToDelete = db.posts.find((p) => p._id === postIdForDelete);
     if (postToDelete && postToDelete.user._id !== currentUser._id) {
       throw new Error("Forbidden");
     }
-    db.posts = db.posts.filter(p => p._id !== postIdForDelete);
+    db.posts = db.posts.filter((p) => p._id !== postIdForDelete);
     await saveMockDB(db);
     return { message: "success" };
   }
@@ -379,17 +400,22 @@ const handleMockRequest = async (method, url, data) => {
   const postIdForLike = getUrlId("posts/");
   if (postIdForLike && method.toLowerCase() === "patch") {
     if (!currentUser) throw new Error("Unauthorized");
-    db.posts = db.posts.map(p => {
+    db.posts = db.posts.map((p) => {
       if (p._id === postIdForLike) {
         const likes = p.likes || [];
-        const index = likes.findIndex(l => (typeof l === 'object' ? l.user : l) === currentUser._id);
-        const newLikes = index === -1 ? [...likes, { user: currentUser._id }] : likes.filter((_, idx) => idx !== index);
+        const index = likes.findIndex(
+          (l) => (typeof l === "object" ? l.user : l) === currentUser._id,
+        );
+        const newLikes =
+          index === -1
+            ? [...likes, { user: currentUser._id }]
+            : likes.filter((_, idx) => idx !== index);
         return { ...p, likes: newLikes };
       }
       return p;
     });
     await saveMockDB(db);
-    const updatedPost = db.posts.find(p => p._id === postIdForLike);
+    const updatedPost = db.posts.find((p) => p._id === postIdForLike);
     return { message: "success", post: updatedPost };
   }
 
@@ -403,12 +429,12 @@ const handleMockRequest = async (method, url, data) => {
       commentCreator: {
         _id: currentUser._id,
         name: currentUser.name,
-        photo: currentUser.photo
+        photo: currentUser.photo,
       },
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
-    db.posts = db.posts.map(p => {
+    db.posts = db.posts.map((p) => {
       if (p._id === postId) {
         return { ...p, comments: [...(p.comments || []), newComment] };
       }
@@ -424,17 +450,18 @@ const handleMockRequest = async (method, url, data) => {
   if (commentIdForPut && method.toLowerCase() === "put") {
     if (!currentUser) throw new Error("Unauthorized");
     const { content } = data || {};
-    db.posts = db.posts.map(p => {
+    db.posts = db.posts.map((p) => {
       if (p.comments) {
         return {
           ...p,
-          comments: p.comments.map(c => {
+          comments: p.comments.map((c) => {
             if (c._id === commentIdForPut) {
-              if (c.commentCreator._id !== currentUser._id) throw new Error("Forbidden");
+              if (c.commentCreator._id !== currentUser._id)
+                throw new Error("Forbidden");
               return { ...c, content };
             }
             return c;
-          })
+          }),
         };
       }
       return p;
@@ -447,17 +474,18 @@ const handleMockRequest = async (method, url, data) => {
   const commentIdForDelete = getUrlId("comments/");
   if (commentIdForDelete && method.toLowerCase() === "delete") {
     if (!currentUser) throw new Error("Unauthorized");
-    db.posts = db.posts.map(p => {
+    db.posts = db.posts.map((p) => {
       if (p.comments) {
         return {
           ...p,
-          comments: p.comments.filter(c => {
+          comments: p.comments.filter((c) => {
             if (c._id === commentIdForDelete) {
-              if (c.commentCreator._id !== currentUser._id) throw new Error("Forbidden");
+              if (c.commentCreator._id !== currentUser._id)
+                throw new Error("Forbidden");
               return false;
             }
             return true;
-          })
+          }),
         };
       }
       return p;
@@ -469,10 +497,9 @@ const handleMockRequest = async (method, url, data) => {
   throw new Error(`Endpoint mock handler not found for: ${method} ${url}`);
 };
 
-
 export const useApiQuery = (key, url, options = {}) => {
   const queryKey = Array.isArray(key) ? key : [key];
-  
+
   return useQuery({
     queryKey,
     queryFn: async () => {
@@ -488,7 +515,7 @@ export const useApiMutation = (method, url, options = {}) => {
 
   return useMutation({
     mutationFn: async (data) => {
-      const finalUrl = typeof url === 'function' ? url(data) : url;
+      const finalUrl = typeof url === "function" ? url(data) : url;
       return handleMockRequest(method, finalUrl, data);
     },
     onSuccess: (data, variables, context) => {
@@ -510,4 +537,3 @@ export const useApiMutation = (method, url, options = {}) => {
 };
 
 export { http };
-
