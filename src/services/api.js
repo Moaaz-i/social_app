@@ -55,32 +55,26 @@ const fetchMockDB = async () => {
   }
 };
 
-const saveMockDB = async (db) => {
-  return new Promise((resolve, reject) => {
-    dbWriteQueue.add(
-      {
-        id: `save-db-${Date.now()}`,
-        priority: 1
-      },
-      async () => {
-        try {
-          const response = await fetch("/local-db-api", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(db, null, 2),
-          });
-          if (!response.ok) throw new Error("Failed to save database");
-          resolve();
-        } catch (e) {
-          console.error("Could not sync database to MongoDB", e);
-          reject(e);
-        }
-      }
-    );
-  });
-};
+const saveMockDB = dbWriteQueue.control(
+  async (db) => {
+    try {
+      const response = await fetch("/local-db-api", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(db, null, 2),
+      });
+      if (!response.ok) throw new Error("Failed to save database");
+    } catch (e) {
+      console.error("Could not sync database to MongoDB", e);
+      throw e;
+    }
+  },
+  {
+    priority: 1
+  }
+);
 
 const getCurrentUser = (db) => {
   const token = localStorage.getItem("access_token");
