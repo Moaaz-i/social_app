@@ -5,7 +5,7 @@ import { MongoClient } from "mongodb";
 import { defineConfig } from "vite";
 
 const mongoUri =
-  "mongodb://mongo:RWNtyhaEphWnYiUmtJqycrKOsFemTaVX@caboose.proxy.rlwy.net:48691/admin?authSource=admin";
+  "mongodb://mongo:RWNtyhaEphWnYiUmtJqycrKOsFemTaVX@caboose.proxy.rlwy.net:48691/social_app?authSource=admin";
 let client = null;
 let clientPromise = null;
 

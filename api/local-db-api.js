@@ -5,7 +5,7 @@ const localDbQueue = new TaskPulse({
   concurrency: 2, // Allow running both collection tasks in parallel!
 });
 
-const uri = process.env.MONGODB_URI || "mongodb://mongo:RWNtyhaEphWnYiUmtJqycrKOsFemTaVX@caboose.proxy.rlwy.net:48691/admin?authSource=admin";
+const uri = process.env.MONGODB_URI || "mongodb://mongo:RWNtyhaEphWnYiUmtJqycrKOsFemTaVX@caboose.proxy.rlwy.net:48691/social_app?authSource=admin";
 let client;
 let clientPromise;
 
@@ -15,7 +15,7 @@ if (!uri) {
   );
 } else {
   let finalUri = uri;
-  // If connection string doesn't specify authSource, route to admin database
+  // If connection string doesn't specify authSource, route to social_app database
   if (!uri.includes("authSource")) {
     const baseUrl = uri.split("?")[0];
     const query = uri.split("?")[1] || "";
@@ -26,7 +26,7 @@ if (!uri) {
     } else {
       finalUri =
         baseUrl.replace(/\/$/, "") +
-        "/admin" +
+        "/social_app" +
         (query ? `?${query}&` : "?") +
         "authSource=admin";
     }
