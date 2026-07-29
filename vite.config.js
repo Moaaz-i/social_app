@@ -1,10 +1,11 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { MongoClient } from "mongodb";
+import react from "@vitejs/plugin-react";
 import { TaskPulse } from "cronflex";
+import { MongoClient } from "mongodb";
+import { defineConfig } from "vite";
 
-const mongoUri = "mongodb://mongo:RWNtyhaEphWnYiUmtJqycrKOsFemTaVX@caboose.proxy.rlwy.net:48691/admin?authSource=admin";
+const mongoUri =
+  "mongodb://mongo:RWNtyhaEphWnYiUmtJqycrKOsFemTaVX@caboose.proxy.rlwy.net:48691/admin?authSource=admin";
 let client = null;
 let clientPromise = null;
 
@@ -25,7 +26,8 @@ const defaultFallbackDB = {
       password: "password",
       dateOfBirth: "1995-01-01",
       gender: "male",
-      photo: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
+      photo:
+        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200",
     },
     {
       _id: "u_admin",
@@ -34,10 +36,11 @@ const defaultFallbackDB = {
       password: "password",
       dateOfBirth: "1990-01-01",
       gender: "male",
-      photo: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=200"
-    }
+      photo:
+        "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=200",
+    },
   ],
-  posts: []
+  posts: [],
 };
 
 function localDbPlugin() {
@@ -52,20 +55,29 @@ function localDbPlugin() {
         if (req.url && req.url.startsWith("/local-db-api")) {
           try {
             const connection = await getClientPromise();
-            const db = connection.db("admin");
+            const db = connection.db("social_app");
             const usersCollection = db.collection("users");
             const postsCollection = db.collection("posts");
 
             if (req.method === "GET") {
-              const getUsersTask = localDbQueue.control(async () => {
-                return await usersCollection.find({}).toArray();
-              }, { id: "get-users" });
+              const getUsersTask = localDbQueue.control(
+                async () => {
+                  return await usersCollection.find({}).toArray();
+                },
+                { id: "get-users" },
+              );
 
-              const getPostsTask = localDbQueue.control(async () => {
-                return await postsCollection.find({}).toArray();
-              }, { id: "get-posts" });
+              const getPostsTask = localDbQueue.control(
+                async () => {
+                  return await postsCollection.find({}).toArray();
+                },
+                { id: "get-posts" },
+              );
 
-              const [users, posts] = await Promise.all([getUsersTask(), getPostsTask()]);
+              const [users, posts] = await Promise.all([
+                getUsersTask(),
+                getPostsTask(),
+              ]);
 
               res.setHeader("Content-Type", "application/json");
               if (users.length === 0 && posts.length === 0) {
@@ -87,23 +99,31 @@ function localDbPlugin() {
                   const { users, posts } = JSON.parse(body);
                   if (!Array.isArray(users) || !Array.isArray(posts)) {
                     res.statusCode = 400;
-                    res.end(JSON.stringify({ error: "Invalid payload format" }));
+                    res.end(
+                      JSON.stringify({ error: "Invalid payload format" }),
+                    );
                     return;
                   }
 
-                  const writeUsers = localDbQueue.control(async () => {
-                    await usersCollection.deleteMany({});
-                    if (users.length > 0) {
-                      await usersCollection.insertMany(users);
-                    }
-                  }, { id: "write-users" });
+                  const writeUsers = localDbQueue.control(
+                    async () => {
+                      await usersCollection.deleteMany({});
+                      if (users.length > 0) {
+                        await usersCollection.insertMany(users);
+                      }
+                    },
+                    { id: "write-users" },
+                  );
 
-                  const writePosts = localDbQueue.control(async () => {
-                    await postsCollection.deleteMany({});
-                    if (posts.length > 0) {
-                      await postsCollection.insertMany(posts);
-                    }
-                  }, { id: "write-posts" });
+                  const writePosts = localDbQueue.control(
+                    async () => {
+                      await postsCollection.deleteMany({});
+                      if (posts.length > 0) {
+                        await postsCollection.insertMany(posts);
+                      }
+                    },
+                    { id: "write-posts" },
+                  );
 
                   // Run in parallel
                   await Promise.all([writeUsers(), writePosts()]);
@@ -125,7 +145,7 @@ function localDbPlugin() {
         }
         next();
       });
-    }
+    },
   };
 }
 
@@ -133,7 +153,7 @@ function localDbPlugin() {
 export default defineConfig({
   plugins: [react(), tailwindcss(), localDbPlugin()],
   optimizeDeps: {
-    exclude: ["ioredis"]
+    exclude: ["ioredis"],
   },
   build: {
     rollupOptions: {
@@ -142,10 +162,14 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes("node_modules")) {
             // Split third-party libraries into separate chunks
-            return id.toString().split("node_modules/")[1].split("/")[0].toString();
+            return id
+              .toString()
+              .split("node_modules/")[1]
+              .split("/")[0]
+              .toString();
           }
-        }
-      }
-    }
-  }
+        },
+      },
+    },
+  },
 });
