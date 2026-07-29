@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { MongoClient } from "mongodb";
+import { TaskPulse } from "cronflex";
 
 const mongoUri = "mongodb://mongo:RWNtyhaEphWnYiUmtJqycrKOsFemTaVX@caboose.proxy.rlwy.net:48691/admin?authSource=admin";
 let client = null;
@@ -40,6 +41,10 @@ const defaultFallbackDB = {
 };
 
 function localDbPlugin() {
+  const localDbQueue = new TaskPulse({
+    concurrency: 2, // Allow running both collection tasks in parallel!
+  });
+
   return {
     name: "local-db-plugin",
     configureServer(server) {
@@ -52,8 +57,15 @@ function localDbPlugin() {
             const postsCollection = db.collection("posts");
 
             if (req.method === "GET") {
-              const users = await usersCollection.find({}).toArray();
-              const posts = await postsCollection.find({}).toArray();
+              const getUsersTask = localDbQueue.control(async () => {
+                return await usersCollection.find({}).toArray();
+              }, { id: "get-users" });
+
+              const getPostsTask = localDbQueue.control(async () => {
+                return await postsCollection.find({}).toArray();
+              }, { id: "get-posts" });
+
+              const [users, posts] = await Promise.all([getUsersTask(), getPostsTask()]);
 
               res.setHeader("Content-Type", "application/json");
               if (users.length === 0 && posts.length === 0) {
@@ -79,17 +91,22 @@ function localDbPlugin() {
                     return;
                   }
 
-                  // Overwrite users
-                  await usersCollection.deleteMany({});
-                  if (users.length > 0) {
-                    await usersCollection.insertMany(users);
-                  }
+                  const writeUsers = localDbQueue.control(async () => {
+                    await usersCollection.deleteMany({});
+                    if (users.length > 0) {
+                      await usersCollection.insertMany(users);
+                    }
+                  }, { id: "write-users" });
 
-                  // Overwrite posts
-                  await postsCollection.deleteMany({});
-                  if (posts.length > 0) {
-                    await postsCollection.insertMany(posts);
-                  }
+                  const writePosts = localDbQueue.control(async () => {
+                    await postsCollection.deleteMany({});
+                    if (posts.length > 0) {
+                      await postsCollection.insertMany(posts);
+                    }
+                  }, { id: "write-posts" });
+
+                  // Run in parallel
+                  await Promise.all([writeUsers(), writePosts()]);
 
                   res.setHeader("Content-Type", "application/json");
                   res.end(JSON.stringify({ success: true }));
