@@ -52,7 +52,7 @@ function localDbPlugin() {
         if (req.url && req.url.startsWith("/local-db-api")) {
           try {
             const connection = await getClientPromise();
-            const db = connection.db("social_app");
+            const db = connection.db("admin");
             const usersCollection = db.collection("users");
             const postsCollection = db.collection("posts");
 

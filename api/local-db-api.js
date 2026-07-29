@@ -61,7 +61,7 @@ export default async function handler(req, res) {
 
   try {
     const connection = await clientPromise;
-    const db = connection.db("social_app");
+    const db = connection.db("admin");
     const usersCollection = db.collection("users");
     const postsCollection = db.collection("posts");
 
