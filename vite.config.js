@@ -4,15 +4,16 @@ import tailwindcss from "@tailwindcss/vite";
 import { MongoClient } from "mongodb";
 
 const mongoUri = "mongodb://mongo:RWNtyhaEphWnYiUmtJqycrKOsFemTaVX@caboose.proxy.rlwy.net:48691/admin?authSource=admin";
-let client;
-let clientPromise;
+let client = null;
+let clientPromise = null;
 
-try {
-  client = new MongoClient(mongoUri);
-  clientPromise = client.connect();
-} catch (e) {
-  console.error("Failed to initialize MongoDB client", e);
-}
+const getClientPromise = () => {
+  if (!clientPromise) {
+    client = new MongoClient(mongoUri);
+    clientPromise = client.connect();
+  }
+  return clientPromise;
+};
 
 const defaultFallbackDB = {
   users: [
@@ -45,7 +46,7 @@ function localDbPlugin() {
       server.middlewares.use(async (req, res, next) => {
         if (req.url && req.url.startsWith("/local-db-api")) {
           try {
-            const connection = await clientPromise;
+            const connection = await getClientPromise();
             const db = connection.db("social_app");
             const usersCollection = db.collection("users");
             const postsCollection = db.collection("posts");
