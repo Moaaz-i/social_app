@@ -114,8 +114,12 @@ function localDbPlugin() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss(), localDbPlugin()],
+  optimizeDeps: {
+    exclude: ["ioredis"]
+  },
   build: {
     rollupOptions: {
+      external: ["ioredis"],
       output: {
         manualChunks(id) {
           if (id.includes("node_modules")) {
