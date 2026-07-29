@@ -113,5 +113,17 @@ function localDbPlugin() {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), localDbPlugin()]
+  plugins: [react(), tailwindcss(), localDbPlugin()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            // Split third-party libraries into separate chunks
+            return id.toString().split("node_modules/")[1].split("/")[0].toString();
+          }
+        }
+      }
+    }
+  }
 });
