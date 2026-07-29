@@ -1,4 +1,9 @@
 import { MongoClient } from 'mongodb';
+import { TaskPulse } from "cronflex";
+
+const localDbQueue = new TaskPulse({
+  concurrency: 2, // Allow running both collection tasks in parallel!
+});
 
 const uri = process.env.MONGODB_URI;
 let client;
@@ -61,8 +66,15 @@ export default async function handler(req, res) {
     const postsCollection = db.collection("posts");
 
     if (req.method === 'GET') {
-      const users = await usersCollection.find({}).toArray();
-      const posts = await postsCollection.find({}).toArray();
+      const getUsersTask = localDbQueue.control(async () => {
+        return await usersCollection.find({}).toArray();
+      }, { id: "get-users-api" });
+
+      const getPostsTask = localDbQueue.control(async () => {
+        return await postsCollection.find({}).toArray();
+      }, { id: "get-posts-api" });
+
+      const [users, posts] = await Promise.all([getUsersTask(), getPostsTask()]);
 
       if (users.length === 0 && posts.length === 0) {
         await usersCollection.insertMany(defaultFallbackDB.users);
@@ -78,17 +90,22 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "Invalid JSON database payload: users and posts must be arrays" });
       }
 
-      // Overwrite users
-      await usersCollection.deleteMany({});
-      if (users.length > 0) {
-        await usersCollection.insertMany(users);
-      }
+      const writeUsers = localDbQueue.control(async () => {
+        await usersCollection.deleteMany({});
+        if (users.length > 0) {
+          await usersCollection.insertMany(users);
+        }
+      }, { id: "write-users-api" });
 
-      // Overwrite posts
-      await postsCollection.deleteMany({});
-      if (posts.length > 0) {
-        await postsCollection.insertMany(posts);
-      }
+      const writePosts = localDbQueue.control(async () => {
+        await postsCollection.deleteMany({});
+        if (posts.length > 0) {
+          await postsCollection.insertMany(posts);
+        }
+      }, { id: "write-posts-api" });
+
+      // Run in parallel
+      await Promise.all([writeUsers(), writePosts()]);
 
       return res.status(200).json({ success: true });
     }
