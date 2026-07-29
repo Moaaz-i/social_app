@@ -38,16 +38,29 @@ const defaultFallbackDB = {
 
 // Helper to initialize and retrieve mock database
 const fetchMockDB = async () => {
+  const localData = localStorage.getItem("app_mock_db");
+  if (localData) {
+    try {
+      return JSON.parse(localData);
+    } catch (e) {
+      // Continue to fetch if parse fails
+    }
+  }
+
   try {
     const response = await fetch("/local-db-api");
     if (!response.ok) throw new Error("Failed to fetch database");
-    return await response.json();
+    const db = await response.json();
+    localStorage.setItem("app_mock_db", JSON.stringify(db));
+    return db;
   } catch (e) {
+    localStorage.setItem("app_mock_db", JSON.stringify(defaultFallbackDB));
     return defaultFallbackDB;
   }
 };
 
 const saveMockDB = async (db) => {
+  localStorage.setItem("app_mock_db", JSON.stringify(db));
   try {
     await fetch("/local-db-api", {
       method: "POST",
@@ -57,7 +70,7 @@ const saveMockDB = async (db) => {
       body: JSON.stringify(db, null, 2),
     });
   } catch (e) {
-    console.error("Failed to save database to disk", e);
+    console.warn("Could not sync database to disk (this is expected in Vercel production). Saved locally in browser.", e);
   }
 };
 
