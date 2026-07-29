@@ -86,14 +86,7 @@ const Navbar = ({hide}) => {
           <div className="flex items-center justify-between h-20">
             {/* Logo/Brand */}
             <Link to="/" className="flex items-center gap-3 group">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
-                <div className="relative w-12 h-12 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-white font-black text-xl">
-                    {AppName[0]}
-                  </span>
-                </div>
-              </div>
+              <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain transform group-hover:scale-110 transition-transform duration-300" />
               <div className="hidden sm:block">
                 <span className="font-black text-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
                   {AppName}
