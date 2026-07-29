@@ -43,28 +43,39 @@ export default async function handler(req, res) {
   try {
     const connection = await clientPromise;
     const db = connection.db("social_app");
-    const collection = db.collection("mock_db");
+    const usersCollection = db.collection("users");
+    const postsCollection = db.collection("posts");
 
     if (req.method === 'GET') {
-      const doc = await collection.findOne({ _id: "current_db" });
-      if (!doc) {
+      const users = await usersCollection.find({}).toArray();
+      const posts = await postsCollection.find({}).toArray();
+
+      if (users.length === 0 && posts.length === 0) {
+        await usersCollection.insertMany(defaultFallbackDB.users);
         return res.status(200).json(defaultFallbackDB);
       }
-      const { _id, ...dbData } = doc;
-      return res.status(200).json(dbData);
+
+      return res.status(200).json({ users, posts });
     }
 
     if (req.method === 'POST') {
-      const dbData = req.body;
-      if (!dbData || typeof dbData !== 'object') {
-        return res.status(400).json({ error: "Invalid JSON database payload" });
+      const { users, posts } = req.body || {};
+      if (!Array.isArray(users) || !Array.isArray(posts)) {
+        return res.status(400).json({ error: "Invalid JSON database payload: users and posts must be arrays" });
       }
 
-      await collection.replaceOne(
-        { _id: "current_db" },
-        { _id: "current_db", ...dbData },
-        { upsert: true }
-      );
+      // Overwrite users
+      await usersCollection.deleteMany({});
+      if (users.length > 0) {
+        await usersCollection.insertMany(users);
+      }
+
+      // Overwrite posts
+      await postsCollection.deleteMany({});
+      if (posts.length > 0) {
+        await postsCollection.insertMany(posts);
+      }
+
       return res.status(200).json({ success: true });
     }
 

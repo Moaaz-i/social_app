@@ -47,16 +47,19 @@ function localDbPlugin() {
           try {
             const connection = await clientPromise;
             const db = connection.db("social_app");
-            const collection = db.collection("mock_db");
+            const usersCollection = db.collection("users");
+            const postsCollection = db.collection("posts");
 
             if (req.method === "GET") {
-              const doc = await collection.findOne({ _id: "current_db" });
+              const users = await usersCollection.find({}).toArray();
+              const posts = await postsCollection.find({}).toArray();
+
               res.setHeader("Content-Type", "application/json");
-              if (!doc) {
+              if (users.length === 0 && posts.length === 0) {
+                await usersCollection.insertMany(defaultFallbackDB.users);
                 res.end(JSON.stringify(defaultFallbackDB));
               } else {
-                const { _id, ...dbData } = doc;
-                res.end(JSON.stringify(dbData));
+                res.end(JSON.stringify({ users, posts }));
               }
               return;
             }
@@ -68,12 +71,25 @@ function localDbPlugin() {
               });
               req.on("end", async () => {
                 try {
-                  const dbData = JSON.parse(body);
-                  await collection.replaceOne(
-                    { _id: "current_db" },
-                    { _id: "current_db", ...dbData },
-                    { upsert: true }
-                  );
+                  const { users, posts } = JSON.parse(body);
+                  if (!Array.isArray(users) || !Array.isArray(posts)) {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: "Invalid payload format" }));
+                    return;
+                  }
+
+                  // Overwrite users
+                  await usersCollection.deleteMany({});
+                  if (users.length > 0) {
+                    await usersCollection.insertMany(users);
+                  }
+
+                  // Overwrite posts
+                  await postsCollection.deleteMany({});
+                  if (posts.length > 0) {
+                    await postsCollection.insertMany(posts);
+                  }
+
                   res.setHeader("Content-Type", "application/json");
                   res.end(JSON.stringify({ success: true }));
                 } catch (err) {
