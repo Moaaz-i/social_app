@@ -4,11 +4,17 @@ import axios from "axios";
 import { API_BASE_URL } from "../config.js";
 import { TaskPulse } from "cronflex";
 
-const dbWriteQueue = new TaskPulse({
-  concurrency: 1, // Only 1 write to MongoDB at a time to prevent race conditions
-  rateMax: 5,     // Limit rate of writes
-  rateWindow: 1000,
-});
+let dbWriteQueue = null;
+const getWriteQueue = () => {
+  if (typeof window !== "undefined" && !dbWriteQueue) {
+    dbWriteQueue = new TaskPulse({
+      concurrency: 1, // Only 1 write to MongoDB at a time to prevent race conditions
+      rateMax: 5,     // Limit rate of writes
+      rateWindow: 1000,
+    });
+  }
+  return dbWriteQueue;
+};
 
 const http = axios.create({
   baseURL: API_BASE_URL,
@@ -55,26 +61,42 @@ const fetchMockDB = async () => {
   }
 };
 
-const saveMockDB = dbWriteQueue.control(
-  async (db) => {
-    try {
-      const response = await fetch("/local-db-api", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(db, null, 2),
-      });
-      if (!response.ok) throw new Error("Failed to save database");
-    } catch (e) {
-      console.error("Could not sync database to MongoDB", e);
-      throw e;
-    }
-  },
-  {
-    priority: 1
+const saveMockDB = async (db) => {
+  const queue = getWriteQueue();
+  if (!queue) {
+    // Fallback if queue is not initialized (e.g., in non-browser environments)
+    const response = await fetch("/local-db-api", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(db, null, 2),
+    });
+    if (!response.ok) throw new Error("Failed to save database");
+    return;
   }
-);
+
+  return queue.control(
+    async (dbVal) => {
+      try {
+        const response = await fetch("/local-db-api", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dbVal, null, 2),
+        });
+        if (!response.ok) throw new Error("Failed to save database");
+      } catch (e) {
+        console.error("Could not sync database to MongoDB", e);
+        throw e;
+      }
+    },
+    {
+      priority: 1
+    }
+  )(db);
+};
 
 const getCurrentUser = (db) => {
   const token = localStorage.getItem("access_token");
