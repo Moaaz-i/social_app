@@ -38,15 +38,6 @@ const defaultFallbackDB = {
 
 // Helper to initialize and retrieve mock database
 const fetchMockDB = async () => {
-  const localData = localStorage.getItem("app_mock_db");
-  if (localData) {
-    try {
-      return JSON.parse(localData);
-    } catch (e) {
-      // Continue to fetch if parse fails
-    }
-  }
-
   try {
     const response = await fetch("/local-db-api");
     if (!response.ok) throw new Error("Failed to fetch database");
@@ -54,7 +45,13 @@ const fetchMockDB = async () => {
     localStorage.setItem("app_mock_db", JSON.stringify(db));
     return db;
   } catch (e) {
-    localStorage.setItem("app_mock_db", JSON.stringify(defaultFallbackDB));
+    console.warn("Failed to fetch database from server. Using local browser backup.", e);
+    const localData = localStorage.getItem("app_mock_db");
+    if (localData) {
+      try {
+        return JSON.parse(localData);
+      } catch (err) {}
+    }
     return defaultFallbackDB;
   }
 };

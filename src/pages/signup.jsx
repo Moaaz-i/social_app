@@ -1,10 +1,10 @@
-import { z } from "zod";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FiUser, FiMail, FiEye, FiUserPlus, FiEyeOff } from "react-icons/fi";
-import useSignup from "../hooks/useSignup";
-import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { FiEye, FiEyeOff, FiMail, FiUser, FiUserPlus } from "react-icons/fi";
+import { Link, useNavigate } from "react-router-dom";
+import { z } from "zod";
+import useSignup from "../hooks/useSignup";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ const Signup = () => {
         .min(8, "Password must be at least 8 characters long")
         .regex(
           /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-])/,
-          "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+          "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
         ),
       rePassword: z.string(),
       dateOfBirth: z.string().min(1, "Date of birth is required"),
@@ -45,9 +45,16 @@ const Signup = () => {
 
   const onSubmit = async (data) => {
     const { name, email, password, rePassword, dateOfBirth } = data;
-    const result = await signup(name, email, password, rePassword, gender, dateOfBirth);
+    const result = await signup(
+      name,
+      email,
+      password,
+      rePassword,
+      gender,
+      dateOfBirth,
+    );
     if (result && !result.error) {
-      navigate('/login');
+      navigate("/login");
     }
   };
 
@@ -65,6 +72,13 @@ const Signup = () => {
             <p className="text-gray-600">
               Fill out the form below to create an account
             </p>
+            <div className="mt-4 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm flex items-center justify-center gap-2">
+              <span className="text-lg">⚠️</span>
+              <p className="font-semibold">
+                Security alert: This site is for testing purposes only, please
+                do not use your real password.
+              </p>
+            </div>
           </div>
 
           <form
