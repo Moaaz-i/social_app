@@ -6,7 +6,7 @@ const CommentForm = ({onSubmit}) => {
   const schema = z.object({
     comment: z
       .string()
-      .max(30, 'Length must be less than or equal to 30 characters long')
+      .max(500, 'Length must be less than or equal to 500 characters long')
   })
 
   const {
