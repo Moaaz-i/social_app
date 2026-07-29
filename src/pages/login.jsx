@@ -1,46 +1,47 @@
-import useLogin from '../hooks/useLogin'
-import {useForm} from 'react-hook-form'
-import {z} from 'zod'
-import {zodResolver} from '@hookform/resolvers/zod'
-import {Link, useNavigate} from 'react-router-dom'
-import {FiMail, FiLock, FiLogIn, FiEye, FiEyeOff} from 'react-icons/fi'
-import useAuth from '../hooks/useAuth'
-import {useEffect, useState} from 'react'
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { FiEye, FiEyeOff, FiLogIn, FiMail } from "react-icons/fi";
+import { Link, useNavigate } from "react-router-dom";
+import { z } from "zod";
+import useAuth from "../hooks/useAuth";
+import useLogin from "../hooks/useLogin";
 
 const Login = () => {
-  const navigate = useNavigate()
-  const {userData} = useAuth()
-  const [loginSuccess, setLoginSuccess] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate();
+  const { userData } = useAuth();
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const schema = z.object({
-    email: z.string().email('Invalid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters long')
-  })
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters long"),
+  });
 
   useEffect(() => {
     if (loginSuccess && userData) {
-      navigate('/')
+      navigate("/");
     }
-  }, [loginSuccess, userData, navigate])
+  }, [loginSuccess, userData, navigate]);
 
   const {
     register,
     handleSubmit,
-    formState: {errors, isSubmitting, isValid}
+    setValue,
+    formState: { errors, isSubmitting, isValid },
   } = useForm({
     resolver: zodResolver(schema),
-    mode: 'onChange'
-  })
+    mode: "onChange",
+  });
 
-  const {Login, error, isLoading} = useLogin()
+  const { Login, error, isLoading } = useLogin();
 
   const onSubmit = async (data) => {
-    const result = await Login(data.email, data.password)
+    const result = await Login(data.email, data.password);
     if (result && !result.error) {
-      setLoginSuccess(true)
+      setLoginSuccess(true);
     } else {
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 flex items-center justify-center p-4 relative overflow-hidden">
@@ -97,11 +98,11 @@ const Login = () => {
                 <input
                   id="email"
                   type="email"
-                  {...register('email')}
+                  {...register("email")}
                   className={`block w-full pr-12 pl-4 py-3.5 border-2 ${
                     errors.email
-                      ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
-                      : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
+                      ? "border-red-400 focus:border-red-500 focus:ring-red-200"
+                      : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
                   } rounded-xl shadow-sm focus:ring-4 transition-all duration-200 bg-gray-50 focus:bg-white`}
                   placeholder="your@email.com"
                   dir="ltr"
@@ -150,12 +151,12 @@ const Login = () => {
                 </button>
                 <input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  {...register('password')}
+                  type={showPassword ? "text" : "password"}
+                  {...register("password")}
                   className={`block w-full pr-12 pl-4 py-3.5 border-2 ${
                     errors.password
-                      ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
-                      : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
+                      ? "border-red-400 focus:border-red-500 focus:ring-red-200"
+                      : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
                   } rounded-xl shadow-sm focus:ring-4 transition-all duration-200 bg-gray-50 focus:bg-white`}
                   placeholder="Enter your password"
                   dir="ltr"
@@ -185,8 +186,8 @@ const Login = () => {
                 disabled={!isValid || isLoading || isSubmitting}
                 className={`w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-base font-bold text-white ${
                   !isValid || isLoading || isSubmitting
-                    ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transform hover:scale-[1.02] active:scale-[0.98]'
+                    ? "bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed"
+                    : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transform hover:scale-[1.02] active:scale-[0.98]"
                 } focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-200`}
               >
                 {isLoading ? (
@@ -215,10 +216,33 @@ const Login = () => {
                   </>
                 ) : (
                   <>
-                    <FiLogIn className="ml-2" />
+                    <FiLogIn className="mr-2" />
                     Login
                   </>
                 )}
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  setValue("email", "guest@example.com", {
+                    shouldValidate: true,
+                  });
+                  setValue("password", "password", { shouldValidate: true });
+                  try {
+                    const result = await Login("guest@example.com", "password");
+                    if (result && !result.error) {
+                      setLoginSuccess(true);
+                    }
+                  } catch (err) {
+                    toast.error("Failed to log in as guest");
+                  }
+                }}
+                className="w-full mt-3 flex justify-center items-center py-3.5 px-4 border-2 border-dashed border-blue-500 rounded-xl text-base font-bold text-blue-600 hover:bg-blue-50/50 hover:border-blue-600 transition-all duration-200 cursor-pointer"
+              >
+                <span className="flex items-center gap-2">
+                  ⚡ Login as Guest
+                </span>
               </button>
             </div>
           </form>
@@ -242,7 +266,7 @@ const Login = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

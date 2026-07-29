@@ -8,7 +8,7 @@ import {
   DeleteComment,
   UpdatePost
 } from '../services/postService'
-import {useUploadPhoto} from '../services/profileService'
+import {useUploadPhoto, useUpdateProfile} from '../services/profileService'
 import {useNavigate, Link} from 'react-router-dom'
 import {useState, useRef, useEffect} from 'react'
 import {toast} from 'react-hot-toast'
@@ -42,7 +42,11 @@ const Home = () => {
   const [photoPreview, setPhotoPreview] = useState(null)
   const [imageKey, setImageKey] = useState(Date.now())
   const [errorPhoto, setErrorPhoto] = useState(null)
-  const [result, setResult] = useState(null)
+  const updateProfile = useUpdateProfile()
+  const [showBannerPicker, setShowBannerPicker] = useState(false)
+  const [isEditingBio, setIsEditingBio] = useState(false)
+  const [bioText, setBioText] = useState("")
+
   const {isOnline, forceDetect} = useOffline()
 
   useEffect(() => {
@@ -158,45 +162,16 @@ const Home = () => {
     const formData = new FormData()
     formData.append('photo', file)
 
-    const result1 = await uploadPhoto.mutateAsync(formData, {
-      onSuccess: () => {
-        setIsUploadingPhoto(false)
-      },
-      onError: (error) => {
-        setIsUploadingPhoto(false)
-        setPhotoPreview(user?.photo)
-
-        const status = error?.response?.status || error?.status
-
-        let message
-        if (status === 413) {
-          message = 'Image size should be less than 5MB'
-        } else if (typeof error === 'string') {
-          message = error
-        } else if (error?.message) {
-          message = error.message
-        } else {
-          message = 'Failed to upload photo'
-        }
-
-        setErrorPhoto(message)
-        toast.error(message)
-      }
-    })
-
     try {
       setErrorPhoto(null)
-      const result = await uploadPhoto.mutateAsync(formData)
-      setResult(result)
-
+      await uploadPhoto.mutateAsync(formData)
+      toast.success('Profile picture updated successfully!')
       setTimeout(() => {
         setImageKey(Date.now())
       }, 500)
     } catch (error) {
       setPhotoPreview(user?.photo)
-
       const status = error?.response?.status || error?.status
-
       let message
       if (status === 413) {
         message = 'Image size should be less than 5MB'
@@ -207,7 +182,6 @@ const Home = () => {
       } else {
         message = 'Failed to upload photo'
       }
-
       setErrorPhoto(message)
       toast.error(message)
     } finally {
@@ -220,14 +194,52 @@ const Home = () => {
       <div className="max-w-6xl mx-auto">
         {/* Welcome Card */}
         <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden mb-8 animate-fadeIn">
+          {/* Cover Banner */}
+          <div className={`h-40 w-full relative ${user?.banner || 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600'} transition-all duration-300`}>
+            {/* Edit Banner Button */}
+            <button
+              onClick={() => setShowBannerPicker(!showBannerPicker)}
+              className="absolute top-4 right-4 bg-white/25 backdrop-blur-md hover:bg-white/40 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md cursor-pointer border border-white/20"
+            >
+              🎨 Change Banner
+            </button>
+          </div>
+
+          {showBannerPicker && (
+            <div className="bg-slate-50 dark:bg-slate-800/80 p-4 border-b border-gray-100 dark:border-slate-700 flex flex-wrap gap-2 justify-center items-center animate-fadeIn">
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-bold mr-2">Choose Banner:</span>
+              {[
+                { name: "Aurora", class: "bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600" },
+                { name: "Emerald", class: "bg-gradient-to-r from-emerald-500 to-teal-600" },
+                { name: "Sunset", class: "bg-gradient-to-r from-orange-400 to-rose-500" },
+                { name: "Midnight", class: "bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900" },
+                { name: "Indigo", class: "bg-gradient-to-r from-indigo-500 to-purple-600" }
+              ].map(gradient => (
+                <button
+                  key={gradient.name}
+                  onClick={async () => {
+                    try {
+                      await updateProfile.mutateAsync({ banner: gradient.class })
+                      setShowBannerPicker(false)
+                    } catch (err) {
+                      toast.error("Failed to update banner")
+                    }
+                  }}
+                  className={`w-8 h-8 rounded-full border-2 border-white dark:border-slate-700 shadow-md cursor-pointer ${gradient.class}`}
+                  title={gradient.name}
+                />
+              ))}
+            </div>
+          )}
+
           {/* Background Pattern */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5"></div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full blur-3xl opacity-10"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-pink-400 to-blue-600 rounded-full blur-3xl opacity-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full blur-3xl opacity-10 pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-pink-400 to-blue-600 rounded-full blur-3xl opacity-10 pointer-events-none"></div>
 
           <div className="relative p-8">
             <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="relative w-32 h-32 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center text-white text-5xl font-bold shadow-2xl group">
+              <div className="relative w-32 h-32 md:-mt-20 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center text-white text-5xl font-bold shadow-2xl group border-4 border-white dark:border-slate-800">
                 {photoPreview ? (
                   <img
                     key={imageKey}
@@ -266,10 +278,57 @@ const Home = () => {
                 <h1 className="text-4xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-transparent bg-clip-text mb-2">
                   {user?.name}
                 </h1>
-                <p className="text-gray-600 flex items-center justify-center md:justify-start gap-2 mb-4">
+                <p className="text-gray-600 flex items-center justify-center md:justify-start gap-2 mb-2">
                   <FiMail className="w-4 h-4" />
                   {user?.email}
                 </p>
+
+                {isEditingBio ? (
+                  <div className="mt-2 mb-3 flex gap-2 max-w-md justify-center md:justify-start">
+                    <input
+                      type="text"
+                      value={bioText}
+                      onChange={(e) => setBioText(e.target.value)}
+                      placeholder="Write something about yourself..."
+                      className="px-3 py-1.5 bg-gray-50 border-2 border-gray-100 rounded-xl text-sm focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200 dark:bg-slate-900 dark:border-slate-800 dark:text-white"
+                    />
+                    <button
+                      onClick={async () => {
+                        try {
+                          await updateProfile.mutateAsync({ bio: bioText })
+                          setIsEditingBio(false)
+                        } catch (err) {
+                          toast.error("Failed to update bio")
+                        }
+                      }}
+                      className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setIsEditingBio(false)}
+                      className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-2 mb-3 flex items-center justify-center md:justify-start gap-2 group/bio">
+                    <p className="text-gray-600 dark:text-gray-300 italic text-sm">
+                      {user?.bio || "No bio added yet. Tell us about yourself!"}
+                    </p>
+                    <button
+                      onClick={() => {
+                        setBioText(user?.bio || "")
+                        setIsEditingBio(true)
+                      }}
+                      className="text-xs text-blue-600 opacity-0 group-hover/bio:opacity-100 transition-opacity cursor-pointer font-bold"
+                    >
+                      ✏️ Edit Bio
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex flex-wrap justify-center md:justify-start gap-2">
                   <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-semibold rounded-xl shadow-lg">
                     <FiUser className="w-4 h-4" />

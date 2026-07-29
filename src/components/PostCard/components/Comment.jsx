@@ -7,7 +7,9 @@ const Comment = ({
   postUser
 }) => {
   const user = comment?.commentCreator || {}
-  const isAuthorized = currentUser?.user?._id === postUser?._id
+  const isAuthorized =
+    currentUser?.user?._id === postUser?._id ||
+    currentUser?.user?._id === user?._id
 
   return (
     <div className="flex items-start group">

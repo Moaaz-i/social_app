@@ -34,3 +34,11 @@ export const useChangePassword = (options = {}) => {
     ...options,
   });
 };
+
+export const useUpdateProfile = (options = {}) => {
+  return useApiMutation("put", "/users/update-profile", {
+    successMessage: "Profile updated successfully!",
+    invalidateQueries: ["profile"],
+    ...options,
+  });
+};

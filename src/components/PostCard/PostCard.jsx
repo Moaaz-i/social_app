@@ -325,7 +325,7 @@ const PostCard = memo(
                         currentUser={userData}
                         postUser={postUser}
                         onDeleteComment={() =>
-                          handleDeleteComment(commentId, userData, postUser)
+                          handleDeleteComment(commentId, userData, comment?.commentCreator || {})
                         }
                       />
                     )
